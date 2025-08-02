@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Package xmlns="http://schemas.genexus.com/addin/v1.0" id="163faefb-1d07-4a23-acca-5f287020bcac" name="Menu">
+
+  <!-- Recursos de texto e imágenes -->
+  <Resources>
+    <Resource type="strings" name="Acme.Packages.Menu.Resources"/>
+    <Resource type="images" name="Acme.Packages.Menu.Resources"/>
+  </Resources>
+
+  <!-- Comandos -->
+  <Commands>
+    <!-- Comando para el menú principal y contextual -->
+    <CommandDefinition id="CmdGenerateLogDebugForm" imageType="ico" image="Icon1" resourceId="CmdGenerateLogDebug_Name" shortcut="CtrlShiftH" />
+    <CommandDefinition id="ShowObjectHistory" imageType="ico" image="Icon1" resourceId="ShowObjectHistory_Name" shortcut="CtrlShiftG" />
+    <CommandDefinition id="WGExtractProcedure" context="selection" resourceId="WGExtractProcedure_Name" />
+    <CommandDefinition id="WGExtractVariable" context="selection" resourceId="WGExtractVariable_Name" />
+    <CommandDefinition id="CmdExportTableStructure" imageType="ico" image="Icon1" resourceId="CmdExportTableStructure_Name" shortcut="CtrlShiftT" />
+    <CommandDefinition id="CmdExportProcedureSource" imageType="ico" image="Icon1" resourceId="CmdExportProcedureSource_Name" shortcut="CtrlShiftP" />
+    <CommandDefinition id="CmdCountCodeLines" imageType="ico" image="Icon1" resourceId="CmdCountCodeLines_Name" shortcut="CtrlShiftL" />
+
+  </Commands>
+
+  <!-- Grupos -->
+  <Groups>
+    <!-- Grupo para el menú principal -->
+    <Group id="MainCommandsGroup">
+      <Command refid="CmdGenerateLogDebugForm" />
+      <Command refid="CmdExportTableStructure" />
+      <Command refid="CmdExportProcedureSource" />
+      <Command refid="CmdCountCodeLines" />
+      <Command refid="ShowObjectHistory" />
+    </Group>
+
+    <!-- Grupo para el menú contextual del editor -->
+    <Group refid="TextEditorContextGrp" package="E52B74A8-98E2-4a99-AE0E-547C72BD086D">
+      <Group id="ContextCommandsGroup">
+        <Command refid="WGExtractProcedure" />
+        <Command refid="WGExtractVariable" />
+      </Group>
+    </Group>
+  </Groups>
+
+  <!-- Menús -->
+  <Menus>
+    <!-- Menú principal -->
+    <Menu type="menubar">
+      <Popup name="Commands" insertBefore="Window">
+        <Group refid="MainCommandsGroup" />
+      </Popup>
+    </Menu>
+
+  </Menus>
+</Package>

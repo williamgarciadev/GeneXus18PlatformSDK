@@ -1,0 +1,381 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A3CC3758-0256-40BB-9B37-160DACE23C9D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Acme.Packages.Menu</RootNamespace>
+    <AssemblyName>Menu</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Artech.Architecture.BL.Framework">
+      <HintPath>..\..\Bin\Artech.Architecture.BL.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Architecture.Common">
+      <HintPath>..\..\Bin\Artech.Architecture.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Architecture.Interfaces">
+      <HintPath>..\..\Bin\Artech.Architecture.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Architecture.Language">
+      <HintPath>..\..\Bin\Artech.Architecture.Language.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Architecture.UI.Framework">
+      <HintPath>..\..\Bin\Artech.Architecture.UI.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common">
+      <HintPath>..\..\Bin\Artech.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.Controls">
+      <HintPath>..\..\Bin\Artech.Common.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.Framework">
+      <HintPath>..\..\Bin\Artech.Common.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.Helpers">
+      <HintPath>..\..\Bin\Artech.Common.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.IPC">
+      <HintPath>..\..\Bin\Artech.Common.IPC.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.Language">
+      <HintPath>..\..\Bin\Artech.Common.Language.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Common.Properties">
+      <HintPath>..\..\Bin\Artech.Common.Properties.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.CommonI">
+      <HintPath>..\..\Bin\Artech.CommonI.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.FrameworkDE">
+      <HintPath>..\..\Bin\Artech.FrameworkDE.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Generators">
+      <HintPath>..\..\Bin\Artech.Generators.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Genexus.Common">
+      <HintPath>..\..\Bin\Artech.Genexus.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Layers.Framework">
+      <HintPath>..\..\Bin\Artech.Layers.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.LibraryDeployer">
+      <HintPath>..\..\Bin\Artech.LibraryDeployer.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.MsBuild.Common">
+      <HintPath>..\..\Bin\Artech.MsBuild.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Packages.Patterns">
+      <HintPath>..\..\Bin\Artech.Packages.Patterns.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Template.Base">
+      <HintPath>..\..\Bin\Artech.Template.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Template.Helper">
+      <HintPath>..\..\Bin\Artech.Template.Helper.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Template.Parser">
+      <HintPath>..\..\Bin\Artech.Template.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Architecture.Common">
+      <HintPath>..\..\Bin\Artech.Udm.Architecture.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.BL">
+      <HintPath>..\..\Bin\Artech.Udm.BL.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Data">
+      <HintPath>..\..\Bin\Artech.Udm.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Framework">
+      <HintPath>..\..\Bin\Artech.Udm.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Layers">
+      <HintPath>..\..\Bin\Artech.Udm.Layers.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Layers.BL">
+      <HintPath>..\..\Bin\Artech.Udm.Layers.BL.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Layers.Common">
+      <HintPath>..\..\Bin\Artech.Udm.Layers.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Udm.Layers.Data.SQL">
+      <HintPath>..\..\Bin\Artech.Udm.Layers.Data.SQL.dll</HintPath>
+    </Reference>
+    <Reference Include="Artech.Wiki.Services">
+      <HintPath>..\..\Bin\Artech.Wiki.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Connector">
+      <HintPath>..\..\Bin\Connector.dll</HintPath>
+    </Reference>
+    <Reference Include="DeklaritLibrary">
+      <HintPath>..\..\Bin\DeklaritLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Genexus.Design.Grammars">
+      <HintPath>..\..\Bin\Genexus.Design.Grammars.dll</HintPath>
+    </Reference>
+    <Reference Include="GxDataLayer">
+      <HintPath>..\..\Bin\GxDataLayer.dll</HintPath>
+    </Reference>
+    <Reference Include="KBDoctor">
+      <HintPath>DllKbDoctor\KBDoctor.dll</HintPath>
+    </Reference>
+    <Reference Include="KBDoctorCore">
+      <HintPath>DllKbDoctor\KBDoctorCore.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\Bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="LSI.Packages.Extensiones.Utilidades">
+      <HintPath>..\..\..\..\..\Program Files (x86)\GeneXus\GeneXus17\Packages\LSI.Packages.Extensiones.Utilidades.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.9.0.4\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Common, Version=4.1.0.0, Culture=neutral, PublicKeyToken=e44a2bc38ed2c13c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Bin\Microsoft.Practices.EnterpriseLibrary.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling">
+      <HintPath>..\..\Bin\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.ObjectBuilder">
+      <HintPath>..\..\Bin\Microsoft.Practices.ObjectBuilder.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Pipelines, Version=9.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.IO.Pipelines.9.0.4\lib\net462\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=9.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Encodings.Web.9.0.4\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=9.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Json.9.0.4\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Commands\CommandKeys.cs" />
+    <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\ResourcesV1.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ResourcesV1.resx</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Editor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Editor.Designer.cs">
+      <DependentUpon>Editor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Services\EditorService.cs" />
+    <Compile Include="Services\EnvironmentInfo.cs" />
+    <Compile Include="UI\Forms\Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\DataTypeHelper.cs" />
+    <Compile Include="Utilities\ExtractorTablasGX.cs" />
+    <Compile Include="Utilities\Functions.cs" />
+    <Compile Include="UI\ITextEditor.cs" />
+    <Compile Include="UI\Forms\LogDebugResultForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Services\LogService.cs" />
+    <Compile Include="Data\ObjectHistory.cs" />
+    <Compile Include="Utilities\ObjectHistory.cs" />
+    <Compile Include="Utilities\ObjectsHelper.cs" />
+    <Compile Include="Commands\Package.cs" />
+    <Compile Include="Data\Object.cs" />
+    <Compile Include="Data\Part.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\CommonPackageInfo.cs" />
+    <Compile Include="Utilities\Utility.cs" />
+    <Compile Include="Processors\VariableProcessor.cs" />
+    <Compile Include="UI\Forms\VariablesInputForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\Utils.cs" />
+    <Compile Include="Utilities\VariableHelper.cs" />
+    <Compile Include="Utilities\ProcedureSourceExtractor.cs" />
+    <!-- Clean Architecture Files -->
+    <Compile Include="Core\Domain\Entities\VariableDefinition.cs" />
+    <Compile Include="Core\Domain\ValueObjects\TypePrefixMapping.cs" />
+    <Compile Include="Core\Domain\Interfaces\IVariableRepository.cs" />
+    <Compile Include="Core\Domain\Interfaces\ITypeResolver.cs" />
+    <Compile Include="Core\Domain\Interfaces\ILogger.cs" />
+    <Compile Include="Core\Application\Services\VariableService.cs" />
+    <Compile Include="Core\Infrastructure\GeneXus\GeneXusVariableRepository.cs" />
+    <Compile Include="Core\Infrastructure\GeneXus\GeneXusTypeResolver.cs" />
+    <Compile Include="Core\Infrastructure\Logging\ConsoleLogger.cs" />
+    <Compile Include="Common\Factories\ServiceFactory.cs" />
+    <Compile Include="Presentation\Facades\VariableHelperFacade.cs" />
+    <!-- Modular Clean Code Architecture Files -->
+    <Compile Include="Infrastructure\ReflectionHelper.cs" />
+    <Compile Include="Infrastructure\BaseKBExporter.cs" />
+    <Compile Include="Models\VariableInfo.cs" />
+    <Compile Include="Models\CodeStats.cs" />
+    <Compile Include="Services\Export\ObjectHistoryExporter.cs" />
+    <Compile Include="Services\Export\CodeLineCounter.cs" />
+    <Compile Include="Services\Variables\VariableExtractor.cs" />
+    <Compile Include="Services\Variables\DebugCodeGenerator.cs" />
+    <Compile Include="Services\Variables\ProcedureVariableExtractor.cs" />
+    <Compile Include="Services\Analysis\CodeAnalyzer.cs" />
+    <Compile Include="Services\Analysis\LineAnalyzer.cs" />
+    <Compile Include="Formatters\HistoryCsvFormatter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="Resources\Images\MenuImages.bmp" />
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\ResourcesV1.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>ResourcesV1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Commands\Menu.package" />
+    <None Include="Resources\Images\Object.ico" />
+    <None Include="Resources\Images\Folder.ico" />
+    <None Include="Resources\Images\document.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Editor.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>Editor.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Catalog.xml" />
+    <Content Include="Utilities\MenProperties.txt" />
+    <None Include="Resources\Images\Icon1.ico" />
+    <None Include="Resources\Images\Image1.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>"$(GX_SDK_DIR)\Tools\Updater" ..\..\Resources\Catalog.xml ..\..\ "$(GX_PROGRAM_DIR_18_U10)"\ $(Configuration)
+"$(GX_PROGRAM_DIR_18_U10)"\Genexus /install
+"$(GX_PROGRAM_DIR_18_U10)"\Genexus.exe /KB:C:\KBs\gx18u3</PostBuildEvent>
+  </PropertyGroup>
+</Project>

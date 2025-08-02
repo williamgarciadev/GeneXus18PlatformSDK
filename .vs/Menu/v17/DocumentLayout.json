@@ -1,0 +1,121 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|c:\\program files (x86)\\genexus\\genexus18platformsdk\\samples\\menuv3\\services\\analysis\\codeanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|solutionrelative:services\\analysis\\codeanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|c:\\program files (x86)\\genexus\\genexus18platformsdk\\samples\\menuv3\\infrastructure\\reflectionhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|solutionrelative:infrastructure\\reflectionhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|c:\\program files (x86)\\genexus\\genexus18platformsdk\\samples\\menuv3\\utilities\\proceduresourceextractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|solutionrelative:utilities\\proceduresourceextractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|c:\\program files (x86)\\genexus\\genexus18platformsdk\\samples\\menuv3\\commands\\commandmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|solutionrelative:commands\\commandmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|c:\\program files (x86)\\genexus\\genexus18platformsdk\\samples\\menuv3\\services\\export\\codelinecounter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3CC3758-0256-40BB-9B37-160DACE23C9D}|Menu.csproj|solutionrelative:services\\export\\codelinecounter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ReflectionHelper.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Infrastructure\\ReflectionHelper.cs",
+              "RelativeDocumentMoniker": "Infrastructure\\ReflectionHelper.cs",
+              "ToolTip": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Infrastructure\\ReflectionHelper.cs",
+              "RelativeToolTip": "Infrastructure\\ReflectionHelper.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAgwAkAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T14:57:22.737Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ProcedureSourceExtractor.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Utilities\\ProcedureSourceExtractor.cs",
+              "RelativeDocumentMoniker": "Utilities\\ProcedureSourceExtractor.cs",
+              "ToolTip": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Utilities\\ProcedureSourceExtractor.cs",
+              "RelativeToolTip": "Utilities\\ProcedureSourceExtractor.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAnwBIAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T14:54:33.223Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CodeAnalyzer.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Services\\Analysis\\CodeAnalyzer.cs",
+              "RelativeDocumentMoniker": "Services\\Analysis\\CodeAnalyzer.cs",
+              "ToolTip": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Services\\Analysis\\CodeAnalyzer.cs",
+              "RelativeToolTip": "Services\\Analysis\\CodeAnalyzer.cs",
+              "ViewState": "AgIAAHkAAAAAAAAAAAAmwIoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T14:54:06.955Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CodeLineCounter.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Services\\Export\\CodeLineCounter.cs",
+              "RelativeDocumentMoniker": "Services\\Export\\CodeLineCounter.cs",
+              "ToolTip": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Services\\Export\\CodeLineCounter.cs",
+              "RelativeToolTip": "Services\\Export\\CodeLineCounter.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAAowDgAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T14:53:11.686Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CommandManager.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Commands\\CommandManager.cs",
+              "RelativeDocumentMoniker": "Commands\\CommandManager.cs",
+              "ToolTip": "C:\\Program Files (x86)\\GeneXus\\GeneXus18PlatformSDK\\Samples\\MenuV3\\Commands\\CommandManager.cs",
+              "RelativeToolTip": "Commands\\CommandManager.cs",
+              "ViewState": "AgIAAEwAAAAAAAAAAAAewFIAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-02T13:48:10.724Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

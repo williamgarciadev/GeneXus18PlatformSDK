@@ -1,0 +1,3 @@
+﻿"$(GX_SDK_DIR)\Tools\Updater" ..\..\Resources\Catalog.xml ..\..\ "$(GX_PROGRAM_DIR_18_U3)"\ $(Configuration)
+"$(GX_PROGRAM_DIR_18_U3)"\Genexus /install
+"$(GX_PROGRAM_DIR_18_U3)"\Genexus.exe /KB:C:\KBs\gx18u3

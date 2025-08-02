@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Projects>
+  <Project Name="Menu" Location=".">
+    <File Name="Menu.dll" Target="Packages" />
+    <File Name="Menu.pdb" Target="Packages" />
+  </Project>
+</Projects>
