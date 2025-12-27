@@ -43,15 +43,22 @@ namespace Acme.Packages.Menu.Utilities
             // 2. Intentar accediendo directamente al Editor activo de GeneXus
             try 
             {
-                if (UIServices.EditorManager != null && UIServices.DocumentManager.ActiveDocument != null)
+                if (UIServices.EditorManager != null)
                 {
-                    // Obtener la vista activa del documento
-                    var view = UIServices.EditorManager.GetEditor(UIServices.DocumentManager.ActiveDocument.Object.Guid) as ITextEditor;
-                    if (view != null)
+                    // Intentar obtener el objeto desde la parte que se está editando actualmente
+                    KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                    KBObject currentObject = currentPart?.KBObject;
+
+                    if (currentObject != null)
                     {
-                        // ITextEditor suele tener métodos para selección, pero depende de la implementación específica
-                        // Si no es ITextEditor estándar, podríamos intentar reflexión o interfaces comunes
-                        // Por ahora, confiamos más en el portapapeles como fallback universal
+                        // Obtener la vista activa del documento
+                        var view = UIServices.EditorManager.GetEditor(currentObject.Guid) as ITextEditor;
+                        if (view != null)
+                        {
+                            // ITextEditor suele tener métodos para selección, pero depende de la implementación específica
+                            // Si no es ITextEditor estándar, podríamos intentar reflexión o interfaces comunes
+                            // Por ahora, confiamos más en el portapapeles como fallback universal
+                        }
                     }
                 }
             }
