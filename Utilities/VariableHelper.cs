@@ -27,7 +27,7 @@ namespace Acme.Packages.Menu.Utilities
             return variablesPart?.Variables.Any(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase)) == true;
         }
 
-        public static void AddVariable(string variableName, KBObjectPart currentPart, eDBType type, int length)
+        public static void AddVariable(string variableName, KBObjectPart currentPart, eDBType type, int length, int decimals = 0)
         {
             if (currentPart == null)
                 return;
@@ -36,10 +36,21 @@ namespace Acme.Packages.Menu.Utilities
             if (variablesPart == null)
                 return;
 
-            if (!variablesPart.Variables.Any(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase)))
+            Variable existingVar = variablesPart.Variables.FirstOrDefault(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingVar == null)
             {
-                Variable newVar = new Variable(variableName, variablesPart) { Type = type, Length = length };
+                Variable newVar = new Variable(variableName, variablesPart) { Type = type, Length = length, Decimals = decimals };
                 variablesPart.Add(newVar);
+            }
+            else if (existingVar.IsAutoDefined)
+            {
+                // Promover variable autodefinida a formal
+                existingVar.IsAutoDefined = false;
+                existingVar.Type = type;
+                existingVar.Length = length;
+                existingVar.Decimals = decimals;
+                Utils.Log($"🔄 Variable autodefinida '{variableName}' promovida a formal.");
             }
 
             //**Guardar los cambios**
@@ -255,30 +266,40 @@ namespace Acme.Packages.Menu.Utilities
             if (variablesPart == null)
                 return;
 
-            if (!variablesPart.Variables.Any(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase)))
-            {
-                Variable newVar = new Variable(variableName, variablesPart)
-                {
-                    AttributeBasedOn = Artech.Genexus.Common.Objects.Attribute.Get(UIServices.KB.CurrentModel, baseReference)
-                };
+            Variable targetVar = variablesPart.Variables.FirstOrDefault(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase));
+            bool isNew = targetVar == null;
 
-                if (newVar.AttributeBasedOn != null)
+            if (isNew || targetVar.IsAutoDefined)
+            {
+                if (isNew)
                 {
-                    variablesPart.Add(newVar);
+                    targetVar = new Variable(variableName, variablesPart);
                 }
-                else
+
+                // Asignar base
+                targetVar.AttributeBasedOn = Artech.Genexus.Common.Objects.Attribute.Get(UIServices.KB.CurrentModel, baseReference);
+                if (targetVar.AttributeBasedOn == null)
                 {
                     Domain domain = Domain.Get(UIServices.KB.CurrentModel, new QualifiedName(baseReference));
                     if (domain != null)
                     {
-                        newVar.DomainBasedOn = domain;
-                        variablesPart.Add(newVar);
+                        targetVar.DomainBasedOn = domain;
                     }
                     else
                     {
                         Utils.Log($"⚠ No se pudo establecer la base de la variable '{variableName}' en '{baseReference}'.");
                         return;
                     }
+                }
+
+                if (isNew)
+                {
+                    variablesPart.Add(targetVar);
+                }
+                else
+                {
+                    targetVar.IsAutoDefined = false;
+                    Utils.Log($"🔄 Variable autodefinida '{variableName}' promovida basada en '{baseReference}'.");
                 }
 
                 // **Guardar cambios en la KB**
@@ -290,23 +311,26 @@ namespace Acme.Packages.Menu.Utilities
                 };
 
                 currentPart.KBObject.Save(savePreferences);
-                Utils.Log($"✅ Variable '{variableName}' creada basada en '{baseReference}'.");
+                Utils.Log($"✅ Variable '{variableName}' creada/actualizada basada en '{baseReference}'.");
 
                 // **Obtener el texto seleccionado del editor con commandData**
-                string selectedText = Utils.GetSelectedTextSafe(commandData);
-                if (!string.IsNullOrEmpty(selectedText))
+                if (commandData != null)
                 {
-                    string oldVariable = $"&{baseReference}_{variableName}";
-                    string newVariable = $"&{variableName}";
-
-                    if (selectedText.Contains(oldVariable))
+                    string selectedText = Utils.GetSelectedTextSafe(commandData);
+                    if (!string.IsNullOrEmpty(selectedText))
                     {
-                        string updatedContent = selectedText.Replace(oldVariable, newVariable);
+                        string oldVariable = $"&{baseReference}_{variableName}";
+                        string newVariable = $"&{variableName}";
 
-                        // **Copiar al portapapeles y pegar en el editor**
-                        Clipboard.SetText(updatedContent);
-                        UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Paste);
-                        Utils.Log($"🔄 Reemplazado '{oldVariable}' por '{newVariable}' en el editor.");
+                        if (selectedText.Contains(oldVariable))
+                        {
+                            string updatedContent = selectedText.Replace(oldVariable, newVariable);
+
+                            // **Copiar al portapapeles y pegar en el editor**
+                            Clipboard.SetText(updatedContent);
+                            UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Paste);
+                            Utils.Log($"🔄 Reemplazado '{oldVariable}' por '{newVariable}' en el editor.");
+                        }
                     }
                 }
 

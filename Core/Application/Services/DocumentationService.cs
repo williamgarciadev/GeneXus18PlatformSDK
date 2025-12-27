@@ -26,8 +26,39 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
             ExtractParameters(obj, dto);
             ExtractVariables(obj, dto);
+            ExtractTransactionStructure(obj, dto);
 
             return dto;
+        }
+
+        private void ExtractTransactionStructure(KBObject obj, ObjectDocumentationDto dto)
+        {
+            if (obj is Transaction trn)
+            {
+                foreach (TransactionLevel level in trn.Structure.GetLevels())
+                {
+                    foreach (TransactionAttribute trnAttr in level.Structure.GetAttributes())
+                    {
+                        // El objeto Attribute contiene la información técnica real
+                        Artech.Genexus.Common.Objects.Attribute attr = trnAttr.Attribute;
+                        
+                        if (attr != null)
+                        {
+                            dto.Structure.Add(new AttributeDocumentationDto
+                            {
+                                Level = level.Name,
+                                Name = attr.Name,
+                                Type = attr.Type.ToString() + (attr.Length > 0 ? "(" + attr.Length + (attr.Decimals > 0 ? "." + attr.Decimals : "") + ")" : ""),
+                                IsKey = trnAttr.IsKey,
+                                IsForeignKey = trnAttr.IsForeignKey,
+                                Formula = attr.Formula != null ? attr.Formula.ToString() : "",
+                                Description = attr.Description,
+                                IsNullable = trnAttr.IsNullable == TableAttribute.IsNullableValue.True
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         private void ExtractParameters(KBObject obj, ObjectDocumentationDto dto)

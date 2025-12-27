@@ -5,7 +5,7 @@ namespace Acme.Packages.Menu.Models
     /// <summary>
     /// Información de una variable extraída
     /// </summary>
-    internal class VariableInfo
+    public class VariableInfo
     {
         public string CleanName { get; set; }
         public eDBType Type { get; set; }

@@ -19,6 +19,8 @@
     <CommandDefinition id="CmdCountCodeLines" imageType="ico" image="Icon1" resourceId="CmdCountCodeLines_Name" shortcut="CtrlShiftL" />
     <CommandDefinition id="CmdExportObjectsWithSourceLines" imageType="ico" image="Icon1" resourceId="CmdExportObjectsWithSourceLines_Name" shortcut="CtrlShiftO" />
     <CommandDefinition id="CmdGenerateMarkdownDocs" imageType="ico" image="Icon1" resourceId="CmdGenerateMarkdownDocs_Name" shortcut="CtrlShiftD" />
+    <CommandDefinition id="CmdCleanUnusedVariables" resourceId="CmdCleanUnusedVariables_Name" />
+    <CommandDefinition id="CmdSmartFixVariables" resourceId="CmdSmartFixVariables_Name" shortcut="CtrlShiftF" />
 
   </Commands>
 
@@ -33,6 +35,8 @@
       <Command refid="CmdExportObjectsWithSourceLines" />
       <Command refid="ShowObjectHistory" />
       <Command refid="CmdGenerateMarkdownDocs" />
+      <Command refid="CmdCleanUnusedVariables" />
+      <Command refid="CmdSmartFixVariables" />
     </Group>
 
     <!-- Grupo para el menú contextual del editor -->
@@ -41,12 +45,16 @@
         <Command refid="WGExtractProcedure" />
         <Command refid="WGExtractVariable" />
         <Command refid="CmdGenerateMarkdownDocs" />
+        <Command refid="CmdCleanUnusedVariables" />
+        <Command refid="CmdSmartFixVariables" />
       </Group>
     </Group>
 
-    <!-- Grupo para el menú contextual del objeto en el KB Explorer -->
-    <Group refid="ObjectContext" package="2a56ea74-1a89-403d-b409-56324d204787">
+    <!-- Grupo para el menú contextual del objeto (el mismo que usa DVelop Cleaner) -->
+    <Group refid="KBObjectGrp" package="98121D96-A7D8-468b-9310-B1F468F812AE">
        <Command refid="CmdGenerateMarkdownDocs" />
+       <Command refid="CmdCleanUnusedVariables" />
+       <Command refid="CmdSmartFixVariables" />
     </Group>
   </Groups>
 

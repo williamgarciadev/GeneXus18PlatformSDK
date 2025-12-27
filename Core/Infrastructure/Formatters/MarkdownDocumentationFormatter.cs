@@ -37,6 +37,28 @@ namespace Acme.Packages.Menu.Core.Infrastructure.Formatters
                 sb.AppendLine();
             }
 
+            if (data.Structure != null && data.Structure.Count > 0)
+            {
+                sb.AppendLine("## 🧱 Estructura de Tabla (Atributos)");
+                
+                var levels = data.Structure.Select(a => a.Level).Distinct();
+                foreach (var levelName in levels)
+                {
+                    sb.AppendLine("### Nivel: " + levelName);
+                    sb.AppendLine("| | Nombre | Tipo | Nulo | Descripción | Fórmula |");
+                    sb.AppendLine("| :--- | :--- | :--- | :--- | :--- | :--- |");
+                    
+                    var levelAttributes = data.Structure.Where(a => a.Level == levelName);
+                    foreach (var a in levelAttributes)
+                    {
+                        string icons = (a.IsKey ? "🔑" : "") + (a.IsForeignKey ? "🔗" : "");
+                        string nullable = a.IsNullable ? "Sí" : "No";
+                        sb.AppendLine("| " + icons + " | " + a.Name + " | " + a.Type + " | " + nullable + " | " + a.Description + " | " + a.Formula + " |");
+                    }
+                    sb.AppendLine();
+                }
+            }
+
             if (data.Variables != null && data.Variables.Count > 0)
             {
                 sb.AppendLine("## 💎 Variables Relevantes");

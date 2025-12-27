@@ -51,9 +51,27 @@ namespace Acme.Packages.Menu.Services.Variables
 
         private VariableInfo DetermineVariableType(string variableName)
         {
-            return variableName.Contains("_")
-                ? ResolveAttributeBasedVariable(variableName)
-                : ResolveTypeFromPrefix(variableName);
+            // 1. Si contiene "_", es el formato explícito "Atributo_Variable"
+            if (variableName.Contains("_"))
+                return ResolveAttributeBasedVariable(variableName);
+
+            // 2. Intentar Búsqueda Semántica: ¿Existe un atributo o dominio con este nombre exacto?
+            var (dataType, fieldLength, isAttributeBased) = VariableHelper.GetTypeAndLengthFromReference(variableName);
+            if (isAttributeBased)
+            {
+                Utils.Log($"🧠 Inteligencia Semántica: Detectado Atributo/Dominio '{variableName}' en la KB.");
+                return new VariableInfo
+                {
+                    CleanName = variableName,
+                    Type = dataType,
+                    Length = fieldLength,
+                    BaseReference = variableName,
+                    IsBasedOnAttributeOrDomain = true
+                };
+            }
+
+            // 3. Fallback a Prefijos (N, V, C, etc.)
+            return ResolveTypeFromPrefix(variableName);
         }
 
         private VariableInfo ResolveAttributeBasedVariable(string variableName)

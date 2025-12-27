@@ -297,9 +297,16 @@
     <Compile Include="Core\Domain\DTOs\ObjectDocumentationDto.cs" />
     <Compile Include="Core\Domain\Interfaces\IDocumentationFormatter.cs" />
     <Compile Include="Core\Domain\Interfaces\IDocumentationService.cs" />
+    <Compile Include="Core\Domain\Interfaces\IVariableCleanerService.cs" />
+    <Compile Include="Core\Domain\Interfaces\ISmartVariableService.cs" />
     <Compile Include="Core\Infrastructure\Formatters\MarkdownDocumentationFormatter.cs" />
     <Compile Include="Core\Application\Services\DocumentationService.cs" />
+    <Compile Include="Core\Application\Services\VariableCleanerService.cs" />
+    <Compile Include="Core\Application\Services\SmartVariableService.cs" />
     <Compile Include="UI\Forms\DocumentationPreviewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\SmartFixVariablesForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Common\Factories\ServiceFactory.cs" />

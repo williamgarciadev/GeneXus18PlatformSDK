@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Architecture.Common.Objects;
 using Artech.Genexus.Common.Objects;
 using Acme.Packages.Menu.Infrastructure;
 using Acme.Packages.Menu.Services.Analysis;
+using Acme.Packages.Menu.UI.Forms;
 using Acme.Packages.Menu.Utilities;
 
 namespace Acme.Packages.Menu.Services.Export
@@ -15,6 +17,20 @@ namespace Acme.Packages.Menu.Services.Export
     /// </summary>
     internal class CodeLineCounter : BaseKBExporter
     {
+        /// <summary>
+        /// Muestra formulario interactivo para conteo de líneas
+        /// </summary>
+        public void ShowCodeLineCountForm()
+        {
+            using (var form = new CodeLinesCountForm())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// Exporta líneas de código directamente a CSV (método legacy)
+        /// </summary>
         public void ExportCodeLinesToCSV()
         {
             var model = UIServices.KB.CurrentModel;
@@ -37,10 +53,7 @@ namespace Acme.Packages.Menu.Services.Export
 
             var codeAnalyzer = new CodeAnalyzer();
             
-            // Procesar Procedures
             ProcessObjectsOfType<Procedure>(model, lines, "Procedure", codeAnalyzer);
-
-            // Procesar WebPanels
             ProcessObjectsOfType<WebPanel>(model, lines, "WebPanel", codeAnalyzer);
 
             return lines;

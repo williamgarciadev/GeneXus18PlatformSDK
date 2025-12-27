@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Common.Framework.Commands;
 using Acme.Packages.Menu.Services.Export;
@@ -9,6 +10,7 @@ using Acme.Packages.Menu.Common.Factories;
 using Acme.Packages.Menu.UI.Forms;
 using Artech.Architecture.Common.Objects;
 using Artech.Architecture.UI.Framework.Objects;
+using Artech.Common.Framework.Selection;
 
 namespace Acme.Packages.Menu
 {
@@ -68,11 +70,121 @@ namespace Acme.Packages.Menu
             AddCommand(CommandKeys.CmdGenerateMarkdownDocs,
                 new ExecHandler(ExecGenerateMarkdownDocs),
                 new QueryHandler(QueryGenerateLogDebugFormCommand));
+
+            AddCommand(CommandKeys.CmdCleanUnusedVariables,
+                new ExecHandler(ExecCleanUnusedVariables),
+                new QueryHandler(QueryGenerateLogDebugFormCommand));
+
+            AddCommand(CommandKeys.CmdSmartFixVariables,
+                new ExecHandler(ExecSmartFixVariables),
+                new QueryHandler(QueryGenerateLogDebugFormCommand));
+        }
+
+        #endregion
+
+        #region Helper for Selection
+
+        private KBObject GetObjectFromContext(CommandData commandData)
+        {
+            KBObject found = null;
+
+            // 1. Intentar obtener desde el contexto del comando (clic derecho)
+            if (commandData != null && commandData.Context != null)
+            {
+                object context = commandData.Context;
+                Utils.Log("🔍 Analizando contexto: " + context.GetType().FullName);
+
+                found = ExtractKBObject(context);
+
+                if (found == null && context is ISelectionContainer container)
+                {
+                    if (container.SelectedObjects != null)
+                    {
+                        foreach (object selObj in container.SelectedObjects)
+                        {
+                            found = ExtractKBObject(selObj);
+                            if (found != null) break;
+                        }
+                    }
+                }
+
+                if (found == null && context is System.Collections.IEnumerable selection)
+                {
+                    foreach (object selObj in selection)
+                    {
+                        found = ExtractKBObject(selObj);
+                        if (found != null) break;
+                    }
+                }
+            }
+
+            // 2. Fallback Global: Si no hay contexto o falló el análisis, usar el editor activo
+            if (found == null)
+            {
+                Utils.Log("🔍 Contexto no identificado, intentando fallback de editor activo...");
+                found = ExtractKBObject(null); // ExtractKBObject ya tiene la lógica de LSI Entorno
+            }
+
+            return found;
+        }
+
+        private KBObject ExtractKBObject(object obj)
+        {
+            if (obj != null)
+            {
+                // Es el objeto directamente
+                if (obj is KBObject kbObj) return kbObj;
+
+                // Es una parte del objeto (ej. Source, Rules, Events)
+                if (obj is KBObjectPart part) return part.KBObject;
+
+                // Es el documento del editor
+                if (obj is IGxDocument doc) return doc.Object;
+            }
+
+            // Fallback: Editor activo a través de LSI
+            try
+            {
+                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                if (currentPart != null) return currentPart.KBObject;
+            }
+            catch { }
+
+            return null;
         }
 
         #endregion
 
         #region Export Commands
+
+        /// <summary>
+        /// Limpia las variables no utilizadas del objeto actual
+        /// </summary>
+        private bool ExecCleanUnusedVariables(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                KBObject currentObject = GetObjectFromContext(commandData);
+
+                if (currentObject == null)
+                {
+                    Utils.ShowError("No se pudo identificar el objeto para limpiar.\nPor favor, asegúrese de seleccionar un objeto en el KB Explorer o tener uno abierto.");
+                    return;
+                }
+
+                var cleaner = ServiceFactory.GetVariableCleanerService();
+                int removed = cleaner.CleanUnusedVariables(currentObject);
+
+                if (removed > 0)
+                {
+                    Utils.ShowInfo($"✅ Se eliminaron {removed} variables no utilizadas en '{currentObject.Name}'.", "Limpieza Completada");
+                }
+                else
+                {
+                    Utils.ShowInfo("No se encontraron variables no utilizadas para eliminar.", "Limpieza Completada");
+                }
+            }, "limpiar variables no usadas");
+        }
 
         /// <summary>
         /// Genera documentación en Markdown para el objeto seleccionado
@@ -81,34 +193,7 @@ namespace Acme.Packages.Menu
         {
             return ExecuteWithErrorHandling(() =>
             {
-                KBObject currentObject = null;
-
-                // 1. Intentar obtener de la selección del contexto del comando (KB Explorer)
-                if (commandData.ContextType == CommandData.CmdContextType.selection && commandData.Context != null)
-                {
-                    if (commandData.Context is System.Collections.IEnumerable selection)
-                    {
-                        foreach (object selObj in selection)
-                        {
-                            if (selObj is KBObject kbObj)
-                            {
-                                currentObject = kbObj;
-                                break;
-                            }
-                        }
-                    }
-                    else if (commandData.Context is KBObject directObj)
-                    {
-                        currentObject = directObj;
-                    }
-                }
-
-                // 2. Si no hay selección en el contexto, intentar con la parte activa del editor
-                if (currentObject == null)
-                {
-                    KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
-                    currentObject = currentPart?.KBObject;
-                }
+                KBObject currentObject = GetObjectFromContext(commandData);
 
                 if (currentObject == null)
                 {
@@ -240,6 +325,45 @@ namespace Acme.Packages.Menu
                 ? CommandState.Enabled
                 : CommandState.Disabled;
             return true;
+        }
+
+        #endregion
+
+        #region Smart Fix Commands
+
+        /// <summary>
+        /// Escanea el objeto actual y permite definir variables no declaradas masivamente.
+        /// </summary>
+        private bool ExecSmartFixVariables(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                KBObject currentObject = GetObjectFromContext(commandData);
+
+                if (currentObject == null)
+                {
+                    Utils.ShowError("No se pudo identificar el objeto para analizar.");
+                    return;
+                }
+
+                var smartService = ServiceFactory.GetSmartVariableService();
+                var undefinedVars = smartService.GetUndefinedVariables(currentObject);
+
+                if (!undefinedVars.Any())
+                {
+                    Utils.ShowInfo("No se detectaron variables sin definir en este objeto.", "Smart Fix");
+                    return;
+                }
+
+                using (var fixForm = new SmartFixVariablesForm(undefinedVars))
+                {
+                    if (fixForm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        smartService.DefineVariables(currentObject, fixForm.SelectedVariables);
+                        Utils.ShowInfo($"✅ Se crearon {fixForm.SelectedVariables.Count} variables exitosamente.", "Smart Fix Completado");
+                    }
+                }
+            }, "auto-definir variables masivamente");
         }
 
         #endregion

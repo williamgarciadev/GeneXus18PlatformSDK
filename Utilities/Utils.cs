@@ -35,50 +35,32 @@ namespace Acme.Packages.Menu.Utilities
 
         public static string GetSelectedTextSafe(CommandData commandData)
         {
-            // 1. Intentar con la extensión de LSI (si está disponible y funciona)
+            // 1. Intentar con la extensión de LSI (Ideal para comandos contextuales)
             string selectedText = CommandDataExtensions.LsiGetSelectedText(commandData);
             if (!string.IsNullOrWhiteSpace(selectedText))
                 return selectedText;
 
-            // 2. Intentar accediendo directamente al Editor activo de GeneXus
-            try 
+            // 2. Fallback: Usar el portapapeles (Simular Ctrl+C)
+            // Agregamos reintentos porque el portapapeles puede tardar unos ms en actualizarse
+            for (int i = 0; i < 3; i++)
             {
-                if (UIServices.EditorManager != null)
+                try
                 {
-                    // Intentar obtener el objeto desde la parte que se está editando actualmente
-                    KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
-                    KBObject currentObject = currentPart?.KBObject;
-
-                    if (currentObject != null)
-                    {
-                        // Obtener la vista activa del documento
-                        var view = UIServices.EditorManager.GetEditor(currentObject.Guid) as ITextEditor;
-                        if (view != null)
-                        {
-                            // ITextEditor suele tener métodos para selección, pero depende de la implementación específica
-                            // Si no es ITextEditor estándar, podríamos intentar reflexión o interfaces comunes
-                            // Por ahora, confiamos más en el portapapeles como fallback universal
-                        }
-                    }
+                    UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Copy);
+                    // Pequeña espera para permitir que el sistema procese el 'Copy'
+                    System.Threading.Thread.Sleep(50); 
+                    
+                    selectedText = Clipboard.GetText().Trim();
+                    if (!string.IsNullOrWhiteSpace(selectedText))
+                        return selectedText;
+                }
+                catch (Exception ex)
+                {
+                    Log($"Intento {i+1} de copia fallido: {ex.Message}");
                 }
             }
-            catch (Exception ex)
-            {
-                Log($"Error intentando acceder al editor directamente: {ex.Message}");
-            }
-
-            // 3. Fallback: Usar el portapapeles (Simular Ctrl+C)
-            try
-            {
-                UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Copy);
-                selectedText = Clipboard.GetText().Trim();
-            }
-            catch (Exception ex)
-            {
-                Log($"Error al intentar copiar del portapapeles: {ex.Message}");
-            }
             
-            return selectedText;
+            return string.Empty;
         }
 
         public static string RemoveAmpersand(string text)

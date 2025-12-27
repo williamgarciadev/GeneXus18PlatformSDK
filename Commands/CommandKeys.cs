@@ -15,6 +15,8 @@ namespace Acme.Packages.Menu
         public static CommandKey CmdCountCodeLines = new CommandKey(MenuPackage.guid, "CmdCountCodeLines");
         public static CommandKey CmdExportObjectsWithSourceLines = new CommandKey(MenuPackage.guid, "CmdExportObjectsWithSourceLines");
         public static CommandKey CmdGenerateMarkdownDocs = new CommandKey(MenuPackage.guid, "CmdGenerateMarkdownDocs");
+        public static CommandKey CmdCleanUnusedVariables = new CommandKey(MenuPackage.guid, "CmdCleanUnusedVariables");
+        public static CommandKey CmdSmartFixVariables = new CommandKey(MenuPackage.guid, "CmdSmartFixVariables");
 
 
 

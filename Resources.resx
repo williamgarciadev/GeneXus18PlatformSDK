@@ -132,6 +132,12 @@
   <data name="CmdGenerateMarkdownDocs_Name" xml:space="preserve">
     <value>Generar Documentación Markdown</value>
   </data>
+  <data name="CmdCleanUnusedVariables_Name" xml:space="preserve">
+    <value>Limpiar Variables No Usadas (Local)</value>
+  </data>
+  <data name="CmdSmartFixVariables_Name" xml:space="preserve">
+    <value>Smart Fix: Auto-Definir Variables</value>
+  </data>
   <data name="CmdGenerateLogDebug_Name" xml:space="preserve">
     <value>Generar Log</value>
   </data>
