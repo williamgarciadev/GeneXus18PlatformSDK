@@ -138,6 +138,9 @@
   <data name="CmdSmartFixVariables_Name" xml:space="preserve">
     <value>Smart Fix: Auto-Definir Variables</value>
   </data>
+  <data name="CmdTraceVariable_Name" xml:space="preserve">
+    <value>Rastrear Variable (Lectura/Escritura)</value>
+  </data>
   <data name="CmdGenerateLogDebug_Name" xml:space="preserve">
     <value>Generar Log</value>
   </data>

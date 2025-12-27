@@ -192,6 +192,7 @@
       <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -295,18 +296,24 @@
     <Compile Include="Core\Infrastructure\GeneXus\GeneXusTypeResolver.cs" />
     <Compile Include="Core\Infrastructure\Logging\ConsoleLogger.cs" />
     <Compile Include="Core\Domain\DTOs\ObjectDocumentationDto.cs" />
+    <Compile Include="Core\Domain\DTOs\VariableOccurrenceDto.cs" />
     <Compile Include="Core\Domain\Interfaces\IDocumentationFormatter.cs" />
     <Compile Include="Core\Domain\Interfaces\IDocumentationService.cs" />
     <Compile Include="Core\Domain\Interfaces\IVariableCleanerService.cs" />
     <Compile Include="Core\Domain\Interfaces\ISmartVariableService.cs" />
+    <Compile Include="Core\Domain\Interfaces\IVariableTracerService.cs" />
     <Compile Include="Core\Infrastructure\Formatters\MarkdownDocumentationFormatter.cs" />
     <Compile Include="Core\Application\Services\DocumentationService.cs" />
     <Compile Include="Core\Application\Services\VariableCleanerService.cs" />
     <Compile Include="Core\Application\Services\SmartVariableService.cs" />
+    <Compile Include="Core\Application\Services\VariableTracerService.cs" />
     <Compile Include="UI\Forms\DocumentationPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\Forms\SmartFixVariablesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\VariableTracerForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Common\Factories\ServiceFactory.cs" />

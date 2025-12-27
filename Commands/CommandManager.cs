@@ -7,6 +7,7 @@ using Acme.Packages.Menu.Services.Variables;
 using Acme.Packages.Menu.Utilities;
 using Artech.Architecture.UI.Framework.Helper;
 using Acme.Packages.Menu.Common.Factories;
+using Acme.Packages.Menu.Core.Domain.DTOs;
 using Acme.Packages.Menu.UI.Forms;
 using Artech.Architecture.Common.Objects;
 using Artech.Architecture.UI.Framework.Objects;
@@ -78,6 +79,10 @@ namespace Acme.Packages.Menu
             AddCommand(CommandKeys.CmdSmartFixVariables,
                 new ExecHandler(ExecSmartFixVariables),
                 new QueryHandler(QueryGenerateLogDebugFormCommand));
+
+            AddCommand(CommandKeys.CmdTraceVariable,
+                new ExecHandler(ExecTraceVariable),
+                new QueryHandler(QueryAlwaysEnabled));
         }
 
         #endregion
@@ -88,7 +93,6 @@ namespace Acme.Packages.Menu
         {
             KBObject found = null;
 
-            // 1. Intentar obtener desde el contexto del comando (clic derecho)
             if (commandData != null && commandData.Context != null)
             {
                 object context = commandData.Context;
@@ -118,11 +122,10 @@ namespace Acme.Packages.Menu
                 }
             }
 
-            // 2. Fallback Global: Si no hay contexto o falló el análisis, usar el editor activo
             if (found == null)
             {
                 Utils.Log("🔍 Contexto no identificado, intentando fallback de editor activo...");
-                found = ExtractKBObject(null); // ExtractKBObject ya tiene la lógica de LSI Entorno
+                found = ExtractKBObject(null);
             }
 
             return found;
@@ -132,23 +135,17 @@ namespace Acme.Packages.Menu
         {
             if (obj != null)
             {
-                // Es el objeto directamente
                 if (obj is KBObject kbObj) return kbObj;
-
-                // Es una parte del objeto (ej. Source, Rules, Events)
                 if (obj is KBObjectPart part) return part.KBObject;
-
-                // Es el documento del editor
                 if (obj is IGxDocument doc) return doc.Object;
             }
 
-            // Fallback: Editor activo a través de LSI
             try
             {
                 KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
                 if (currentPart != null) return currentPart.KBObject;
             }
-            catch { }
+            catch {{}}
 
             return null;
         }
@@ -330,6 +327,82 @@ namespace Acme.Packages.Menu
         #endregion
 
         #region Smart Fix Commands
+
+        /// <summary>
+        /// Rastrear una variable seleccionada en todo el objeto actual.
+        /// </summary>
+        private bool ExecTraceVariable(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                string selectedVar = Utils.GetSelectedTextSafe(commandData);
+                if (string.IsNullOrEmpty(selectedVar))
+                {
+                    Utils.ShowError("Por favor, seleccione el nombre de una variable en el código para rastrear.");
+                    return;
+                }
+
+                if (!selectedVar.StartsWith("&")) selectedVar = "&" + selectedVar;
+
+                KBObject currentObject = GetObjectFromContext(commandData);
+                if (currentObject == null)
+                {
+                    Utils.ShowError("No se pudo identificar el objeto para rastrear.");
+                    return;
+                }
+
+                var tracer = ServiceFactory.GetVariableTracerService();
+                var traces = tracer.GetOccurrences(currentObject, selectedVar);
+
+                if (traces.Count == 0)
+                {
+                    Utils.ShowInfo($"No se encontraron ocurrencias de '{selectedVar}' en el código activo.", "Rastreador");
+                    return;
+                }
+
+                using (var tracerForm = new VariableTracerForm(selectedVar, traces))
+                {
+                    tracerForm.OnJumpToCode += (trace) => {
+                        JumpToLine(currentObject, trace);
+                    };
+                    tracerForm.ShowDialog();
+                }
+            }, "rastrear variable");
+        }
+
+        private void JumpToLine(KBObject obj, VariableOccurrenceDto trace)
+        {
+            try 
+            {
+                foreach (KBObjectPart part in obj.Parts)
+                {
+                    if (part.Name.Equals(trace.PartName, StringComparison.OrdinalIgnoreCase) || 
+                        part.TypeDescriptor.Name.Equals(trace.PartName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        UIServices.DocumentManager.OpenDocument(obj, new OpenDocumentOptions());
+                        
+                        try 
+                        {
+                            object editorObj = UIServices.EditorManager.GetEditor(part.Guid);
+                            if (editorObj != null)
+                            {
+                                System.Reflection.MethodInfo selectMethod = editorObj.GetType().GetMethod("Select", new Type[] { typeof(int), typeof(int) });
+                                if (selectMethod != null)
+                                {
+                                    selectMethod.Invoke(editorObj, new object[] { trace.LineNumber, 1 });
+                                }
+                            }
+                        }
+                        catch {{}}
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Utils.Log("No se pudo saltar a la línea: " + ex.Message);
+            }
+        }
 
         /// <summary>
         /// Escanea el objeto actual y permite definir variables no declaradas masivamente.

@@ -21,6 +21,7 @@
     <CommandDefinition id="CmdGenerateMarkdownDocs" imageType="ico" image="Icon1" resourceId="CmdGenerateMarkdownDocs_Name" shortcut="CtrlShiftD" />
     <CommandDefinition id="CmdCleanUnusedVariables" resourceId="CmdCleanUnusedVariables_Name" />
     <CommandDefinition id="CmdSmartFixVariables" resourceId="CmdSmartFixVariables_Name" shortcut="CtrlShiftF" />
+    <CommandDefinition id="CmdTraceVariable" resourceId="CmdTraceVariable_Name" shortcut="CtrlShiftV" />
 
   </Commands>
 
@@ -37,6 +38,7 @@
       <Command refid="CmdGenerateMarkdownDocs" />
       <Command refid="CmdCleanUnusedVariables" />
       <Command refid="CmdSmartFixVariables" />
+      <Command refid="CmdTraceVariable" />
     </Group>
 
     <!-- Grupo para el menú contextual del editor -->
@@ -47,6 +49,7 @@
         <Command refid="CmdGenerateMarkdownDocs" />
         <Command refid="CmdCleanUnusedVariables" />
         <Command refid="CmdSmartFixVariables" />
+        <Command refid="CmdTraceVariable" />
       </Group>
     </Group>
 
@@ -55,6 +58,7 @@
        <Command refid="CmdGenerateMarkdownDocs" />
        <Command refid="CmdCleanUnusedVariables" />
        <Command refid="CmdSmartFixVariables" />
+       <Command refid="CmdTraceVariable" />
     </Group>
   </Groups>
 

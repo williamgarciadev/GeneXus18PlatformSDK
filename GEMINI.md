@@ -65,3 +65,11 @@ The project includes a post-build event that:
 *   `Services/`: Business logic implementations.
 *   `UI/`: Windows Forms and user controls.
 *   `Utilities/`: Helper classes (some legacy).
+
+## 🌟 SDK Best Practices
+
+1.  **Selection & Context**: Use `CommandData.Context` and check for `ISelectionContainer` for tree-based selection. Use `LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart` for editor context.
+2.  **Object Persistence**: Use `obj.Timestamp` for last modification and `obj.Save()` to commit changes.
+3.  **Transaction Exploration**: Use `level.Structure.GetAttributes()` to iterate over attributes in any level. Use `trnAttr.Attribute` to access technical metadata (Type, Length).
+4.  **Editor Interaction**: Avoid `dynamic` to prevent runtime errors. Use **Reflection** to call IDE methods like `Select(line, column)`.
+5.  **Clipboard Robustness**: When simulating Copy/Paste, use retry loops with brief sleeps (e.g., 50ms) to ensure the Windows clipboard has time to update.

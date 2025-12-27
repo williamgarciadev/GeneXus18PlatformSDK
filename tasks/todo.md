@@ -30,5 +30,5 @@ El objetivo es crear una funcionalidad que permita generar documentación técni
 - [ ] **Integrar Comando**: Agregar "Limpiar Variables No Usadas" al menú contextual. <!-- id: 11 -->
 
 ## 🔍 Fase 6: Rastreador de Variable (Variable Tracer)
-- [ ] **Diseñar UI de Rastreo**: Crear formulario para mostrar ocurrencias. <!-- id: 12 -->
-- [ ] **Implementar Buscador**: Lógica para clasificar Lectura/Escritura. <!-- id: 13 -->
+- [x] **Diseñar UI de Rastreo**: Crear formulario para mostrar ocurrencias. <!-- id: 12 -->
+- [x] **Implementar Buscador**: Lógica para clasificar Lectura/Escritura. <!-- id: 13 -->
