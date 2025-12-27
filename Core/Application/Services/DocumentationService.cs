@@ -20,8 +20,8 @@ namespace Acme.Packages.Menu.Core.Application.Services
                 Description = obj.Description,
                 Type = obj.TypeDescriptor.Name,
                 Module = obj.Module?.Name,
-                LastModified = obj.ModifiedAt,
-                KBName = obj.Model?.ParentContext?.Name ?? "Unknown"
+                LastModified = obj.Timestamp,
+                KBName = obj.Model?.KB?.Name ?? "Unknown"
             };
 
             ExtractParameters(obj, dto);

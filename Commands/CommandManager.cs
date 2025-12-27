@@ -8,6 +8,7 @@ using Artech.Architecture.UI.Framework.Helper;
 using Acme.Packages.Menu.Common.Factories;
 using Acme.Packages.Menu.UI.Forms;
 using Artech.Architecture.Common.Objects;
+using Artech.Architecture.UI.Framework.Objects;
 
 namespace Acme.Packages.Menu
 {
@@ -74,16 +75,19 @@ namespace Acme.Packages.Menu
         #region Export Commands
 
         /// <summary>
-        /// Genera documentación en Markdown para el objeto seleccionado
+        /// Genera documentación en Markdown para el objeto seleccionado (debe estar abierto)
         /// </summary>
         private bool ExecGenerateMarkdownDocs(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
-                KBObject currentObject = UIServices.KB.CurrentObject;
+                // Intentar obtener el objeto del documento activo (lo más seguro)
+                IGxDocument activeDoc = UIServices.DocumentManager.ActiveDocument;
+                KBObject currentObject = activeDoc?.Object;
+
                 if (currentObject == null)
                 {
-                    Utils.ShowError("No hay ningún objeto seleccionado o abierto.");
+                    Utils.ShowError("No hay ningún objeto abierto en el editor.\nPor favor, abra el objeto (Procedimiento/Transacción) que desea documentar.");
                     return;
                 }
 
