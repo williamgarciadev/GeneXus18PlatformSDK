@@ -83,7 +83,7 @@ namespace Acme.Packages.Menu
             {
                 // Intentar obtener el objeto desde la parte que se está editando actualmente
                 // Esto depende de la librería LSI.Packages.Extensiones.Utilidades
-                Artech.Genexus.Common.Parts.KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
                 KBObject currentObject = currentPart?.KBObject;
 
                 if (currentObject == null)
