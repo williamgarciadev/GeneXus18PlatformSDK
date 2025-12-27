@@ -81,24 +81,43 @@ namespace Acme.Packages.Menu.UI.Forms
             var colCheck = new DataGridViewCheckBoxColumn { HeaderText = "Crear", Name = "Create", Width = 50 };
             dgvVariables.Columns.Add(colCheck);
             dgvVariables.Columns.Add("Name", "Nombre");
-            dgvVariables.Columns.Add("Type", "Tipo Sugerido");
+            dgvVariables.Columns.Add("Type", "Tipo Sugerido (Editable)");
             dgvVariables.Columns.Add("Reference", "Basado en KB");
 
             foreach (var v in variables)
             {
+                string typeStr = FormatType(v);
                 int rowIndex = dgvVariables.Rows.Add(
                     true, 
                     v.CleanName, 
-                    v.Type.ToString() + (v.Length > 0 ? $"({v.Length})" : ""),
+                    typeStr,
                     v.IsBasedOnAttributeOrDomain ? "✅ " + v.BaseReference : "-"
                 );
                 dgvVariables.Rows[rowIndex].Tag = v;
             }
 
             dgvVariables.Columns["Name"].ReadOnly = true;
-            dgvVariables.Columns["Type"].ReadOnly = true;
+            dgvVariables.Columns["Type"].ReadOnly = false; // ¡AHORA EDITABLE!
             dgvVariables.Columns["Reference"].ReadOnly = true;
             dgvVariables.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private string FormatType(VariableInfo v)
+        {
+            if (v.Type == Artech.Genexus.Common.eDBType.NUMERIC)
+                return $"N({v.Length}.{v.Decimals})";
+            if (v.Type == Artech.Genexus.Common.eDBType.VARCHAR)
+                return $"V({v.Length})";
+            if (v.Type == Artech.Genexus.Common.eDBType.CHARACTER)
+                return $"C({v.Length})";
+            if (v.Type == Artech.Genexus.Common.eDBType.Boolean)
+                return "Boolean";
+            if (v.Type == Artech.Genexus.Common.eDBType.DATE)
+                return "Date";
+            if (v.Type == Artech.Genexus.Common.eDBType.DATETIME)
+                return "DateTime";
+            
+            return v.Type.ToString() + (v.Length > 0 ? $"({v.Length})" : "");
         }
 
         private void btnConfirm_Click(object sender, EventArgs e)
@@ -108,7 +127,13 @@ namespace Acme.Packages.Menu.UI.Forms
             {
                 if ((bool)row.Cells["Create"].Value)
                 {
-                    SelectedVariables.Add((VariableInfo)row.Tag);
+                    var v = (VariableInfo)row.Tag;
+                    string manualType = row.Cells["Type"].Value.ToString();
+                    
+                    // Si el usuario editó manualmente el tipo, intentamos parsearlo
+                    ApplyManualType(v, manualType);
+                    
+                    SelectedVariables.Add(v);
                 }
             }
 
@@ -120,6 +145,34 @@ namespace Acme.Packages.Menu.UI.Forms
 
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void ApplyManualType(VariableInfo v, string text)
+        {
+            if (v.IsBasedOnAttributeOrDomain && text.Contains("✅")) return;
+
+            text = text.ToUpper().Trim();
+
+            // Regex para capturar Tipo(Largo.Dec) ej: N(10.2) o V(128)
+            var match = System.Text.RegularExpressions.Regex.Match(text, @"^([NVC])\((\d+)(?:\.(\d+))?\)$");
+            if (match.Success)
+            {
+                char t = match.Groups[1].Value[0];
+                int len = int.Parse(match.Groups[2].Value);
+                int dec = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
+
+                v.Length = len;
+                v.Decimals = dec;
+                if (t == 'N') v.Type = Artech.Genexus.Common.eDBType.NUMERIC;
+                if (t == 'V') v.Type = Artech.Genexus.Common.eDBType.VARCHAR;
+                if (t == 'C') v.Type = Artech.Genexus.Common.eDBType.CHARACTER;
+                return;
+            }
+
+            // Fallback para tipos simples
+            if (text.StartsWith("BOOL")) v.Type = Artech.Genexus.Common.eDBType.Boolean;
+            else if (text.StartsWith("DATE")) v.Type = Artech.Genexus.Common.eDBType.DATE;
+            else if (text.StartsWith("DATETI")) v.Type = Artech.Genexus.Common.eDBType.DATETIME;
         }
     }
 }
