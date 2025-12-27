@@ -117,49 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CmdExportTableStructure_Name" xml:space="preserve">
-    <value>Exportar estructura de tablas</value>
-  </data>
-  <data name="CmdExportProcedureSource_Name" xml:space="preserve">
-    <value>Exportar Source Code</value>
-  </data>
-  <data name="CmdCountCodeLines_Name" xml:space="preserve">
-    <value>Contar Líneas de Código</value>
-  </data>
-  <data name="CmdExportObjectsWithSourceLines_Name" xml:space="preserve">
-    <value>Exportar Objetos con Líneas + Código Fuente</value>
-  </data>
-  <data name="CmdGenerateMarkdownDocs_Name" xml:space="preserve">
-    <value>Generar Documentación Markdown</value>
-  </data>
-  <data name="CmdGenerateLogDebug_Name" xml:space="preserve">
-    <value>Generar Log</value>
-  </data>
-  <data name="CreateTransaction" xml:space="preserve">
-    <value>&amp;Crear Transaccion</value>
-  </data>
-  <data name="MyCommands" xml:space="preserve">
-    <value>My Commands</value>
-  </data>
-  <data name="MyFirstCommand" xml:space="preserve">
-    <value>My &amp;First Command</value>
-  </data>
-  <data name="MySecondCommand" xml:space="preserve">
-    <value>My &amp;Second Command</value>
-  </data>
-  <data name="ShowObjectHistory_Name" xml:space="preserve">
-    <value>Exportar History</value>
-  </data>
-  <data name="WGExtractProcedure_Name" xml:space="preserve">
-    <value>Extraer Log</value>
-  </data>
-  <data name="WGExtractVariable_Name" xml:space="preserve">
-    <value>Agregar Variable</value>
-  </data>
-  <data name="WhyNotAnotherCommand" xml:space="preserve">
-    <value>&amp;Why not Another Command?</value>
-  </data>
-  <data name="YetAnotherCommand" xml:space="preserve">
-    <value>&amp;Yet Another Command</value>
-  </data>
 </root>

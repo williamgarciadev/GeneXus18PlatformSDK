@@ -5,6 +5,9 @@ using Acme.Packages.Menu.Services.Export;
 using Acme.Packages.Menu.Services.Variables;
 using Acme.Packages.Menu.Utilities;
 using Artech.Architecture.UI.Framework.Helper;
+using Acme.Packages.Menu.Common.Factories;
+using Acme.Packages.Menu.UI.Forms;
+using Artech.Architecture.Common.Objects;
 
 namespace Acme.Packages.Menu
 {
@@ -56,11 +59,44 @@ namespace Acme.Packages.Menu
             AddCommand(CommandKeys.CmdCountCodeLines,
                 new ExecHandler(ExecCountCodeLines),
                 new QueryHandler(QueryAlwaysEnabled));
+
+            AddCommand(CommandKeys.CmdExportObjectsWithSourceLines,
+                new ExecHandler(ExecExportObjectsWithSourceLines),
+                new QueryHandler(QueryAlwaysEnabled));
+
+            AddCommand(CommandKeys.CmdGenerateMarkdownDocs,
+                new ExecHandler(ExecGenerateMarkdownDocs),
+                new QueryHandler(QueryGenerateLogDebugFormCommand));
         }
 
         #endregion
 
         #region Export Commands
+
+        /// <summary>
+        /// Genera documentación en Markdown para el objeto seleccionado
+        /// </summary>
+        private bool ExecGenerateMarkdownDocs(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                KBObject currentObject = UIServices.KB.CurrentObject;
+                if (currentObject == null)
+                {
+                    Utils.ShowError("No hay ningún objeto seleccionado o abierto.");
+                    return;
+                }
+
+                var docService = ServiceFactory.GetDocumentationService();
+                var formatter = ServiceFactory.GetDocumentationFormatter();
+
+                var docData = docService.ExtractDocumentation(currentObject);
+                var markdown = formatter.Format(docData);
+
+                var previewForm = new DocumentationPreviewForm(markdown, currentObject.Name);
+                previewForm.ShowDialog();
+            }, "generar documentación markdown");
+        }
 
         /// <summary>
         /// Exporta la estructura de tablas de todas las transacciones
@@ -85,15 +121,26 @@ namespace Acme.Packages.Menu
         }
 
         /// <summary>
-        /// Cuenta líneas de código de Procedures y WebPanels excluyendo comentarios
+        /// Muestra formulario interactivo para contar líneas de código
         /// </summary>
         private bool ExecCountCodeLines(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
                 var lineCounter = new CodeLineCounter();
-                lineCounter.ExportCodeLinesToCSV();
-            }, "contar líneas de código");
+                lineCounter.ShowCodeLineCountForm();
+            }, "mostrar contador de líneas de código");
+        }
+
+        /// <summary>
+        /// Exporta objetos con líneas operativas a CSV y archivos individuales de código fuente
+        /// </summary>
+        private bool ExecExportObjectsWithSourceLines(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                ObjectSourceLineExporter.ExportarObjetosConLineasOperativas();
+            }, "exportar objetos con líneas operativas y código fuente");
         }
 
         /// <summary>

@@ -13,6 +13,8 @@ namespace Acme.Packages.Menu
         public static CommandKey ShowObjectHistory = new CommandKey(MenuPackage.guid, "ShowObjectHistory");
         public static CommandKey CmdExportProcedureSource = new CommandKey(MenuPackage.guid, "CmdExportProcedureSource");
         public static CommandKey CmdCountCodeLines = new CommandKey(MenuPackage.guid, "CmdCountCodeLines");
+        public static CommandKey CmdExportObjectsWithSourceLines = new CommandKey(MenuPackage.guid, "CmdExportObjectsWithSourceLines");
+        public static CommandKey CmdGenerateMarkdownDocs = new CommandKey(MenuPackage.guid, "CmdGenerateMarkdownDocs");
 
 
 

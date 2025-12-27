@@ -260,6 +260,12 @@
     <Compile Include="UI\Forms\LogDebugResultForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Forms\CodeLinesCountForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\CodeLinesCountForm.Designer.cs">
+      <DependentUpon>CodeLinesCountForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Services\LogService.cs" />
     <Compile Include="Data\ObjectHistory.cs" />
     <Compile Include="Utilities\ObjectHistory.cs" />
@@ -277,6 +283,7 @@
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Utilities\VariableHelper.cs" />
     <Compile Include="Utilities\ProcedureSourceExtractor.cs" />
+    <Compile Include="Utilities\ObjectSourceLineExporter.cs" />
     <!-- Clean Architecture Files -->
     <Compile Include="Core\Domain\Entities\VariableDefinition.cs" />
     <Compile Include="Core\Domain\ValueObjects\TypePrefixMapping.cs" />
@@ -287,6 +294,14 @@
     <Compile Include="Core\Infrastructure\GeneXus\GeneXusVariableRepository.cs" />
     <Compile Include="Core\Infrastructure\GeneXus\GeneXusTypeResolver.cs" />
     <Compile Include="Core\Infrastructure\Logging\ConsoleLogger.cs" />
+    <Compile Include="Core\Domain\DTOs\ObjectDocumentationDto.cs" />
+    <Compile Include="Core\Domain\Interfaces\IDocumentationFormatter.cs" />
+    <Compile Include="Core\Domain\Interfaces\IDocumentationService.cs" />
+    <Compile Include="Core\Infrastructure\Formatters\MarkdownDocumentationFormatter.cs" />
+    <Compile Include="Core\Application\Services\DocumentationService.cs" />
+    <Compile Include="UI\Forms\DocumentationPreviewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Common\Factories\ServiceFactory.cs" />
     <Compile Include="Presentation\Facades\VariableHelperFacade.cs" />
     <!-- Modular Clean Code Architecture Files -->

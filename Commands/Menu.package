@@ -17,6 +17,8 @@
     <CommandDefinition id="CmdExportTableStructure" imageType="ico" image="Icon1" resourceId="CmdExportTableStructure_Name" shortcut="CtrlShiftT" />
     <CommandDefinition id="CmdExportProcedureSource" imageType="ico" image="Icon1" resourceId="CmdExportProcedureSource_Name" shortcut="CtrlShiftP" />
     <CommandDefinition id="CmdCountCodeLines" imageType="ico" image="Icon1" resourceId="CmdCountCodeLines_Name" shortcut="CtrlShiftL" />
+    <CommandDefinition id="CmdExportObjectsWithSourceLines" imageType="ico" image="Icon1" resourceId="CmdExportObjectsWithSourceLines_Name" shortcut="CtrlShiftO" />
+    <CommandDefinition id="CmdGenerateMarkdownDocs" imageType="ico" image="Icon1" resourceId="CmdGenerateMarkdownDocs_Name" shortcut="CtrlShiftD" />
 
   </Commands>
 
@@ -28,7 +30,9 @@
       <Command refid="CmdExportTableStructure" />
       <Command refid="CmdExportProcedureSource" />
       <Command refid="CmdCountCodeLines" />
+      <Command refid="CmdExportObjectsWithSourceLines" />
       <Command refid="ShowObjectHistory" />
+      <Command refid="CmdGenerateMarkdownDocs" />
     </Group>
 
     <!-- Grupo para el menú contextual del editor -->

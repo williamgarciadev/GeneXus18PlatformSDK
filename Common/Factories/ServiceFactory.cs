@@ -2,6 +2,7 @@ using Acme.Packages.Menu.Core.Application.Services;
 using Acme.Packages.Menu.Core.Domain.Interfaces;
 using Acme.Packages.Menu.Core.Infrastructure.GeneXus;
 using Acme.Packages.Menu.Core.Infrastructure.Logging;
+using Acme.Packages.Menu.Core.Infrastructure.Formatters;
 
 namespace Acme.Packages.Menu.Common.Factories
 {
@@ -11,6 +12,8 @@ namespace Acme.Packages.Menu.Common.Factories
         private static IVariableRepository _variableRepository;
         private static ITypeResolver _typeResolver;
         private static VariableService _variableService;
+        private static IDocumentationService _documentationService;
+        private static IDocumentationFormatter _documentationFormatter;
 
         public static ILogger GetLogger()
         {
@@ -33,6 +36,16 @@ namespace Acme.Packages.Menu.Common.Factories
                 GetVariableRepository(),
                 GetTypeResolver(),
                 GetLogger()));
+        }
+
+        public static IDocumentationService GetDocumentationService()
+        {
+            return _documentationService ?? (_documentationService = new DocumentationService());
+        }
+
+        public static IDocumentationFormatter GetDocumentationFormatter()
+        {
+            return _documentationFormatter ?? (_documentationFormatter = new MarkdownDocumentationFormatter());
         }
     }
 }
