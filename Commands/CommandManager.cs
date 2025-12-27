@@ -81,13 +81,14 @@ namespace Acme.Packages.Menu
         {
             return ExecuteWithErrorHandling(() =>
             {
-                // Intentar obtener el objeto del documento activo (lo más seguro)
-                IGxDocument activeDoc = UIServices.DocumentManager.ActiveDocument;
-                KBObject currentObject = activeDoc?.Object;
+                // Intentar obtener el objeto desde la parte que se está editando actualmente
+                // Esto depende de la librería LSI.Packages.Extensiones.Utilidades
+                Artech.Genexus.Common.Parts.KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                KBObject currentObject = currentPart?.KBObject;
 
                 if (currentObject == null)
                 {
-                    Utils.ShowError("No hay ningún objeto abierto en el editor.\nPor favor, abra el objeto (Procedimiento/Transacción) que desea documentar.");
+                    Utils.ShowError("No hay ningún objeto abierto y activo en el editor.\nPor favor, abra el objeto (Procedimiento/Transacción) que desea documentar y asegúrese de tener el foco en él.");
                     return;
                 }
 
