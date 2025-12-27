@@ -75,20 +75,44 @@ namespace Acme.Packages.Menu
         #region Export Commands
 
         /// <summary>
-        /// Genera documentación en Markdown para el objeto seleccionado (debe estar abierto)
+        /// Genera documentación en Markdown para el objeto seleccionado
         /// </summary>
         private bool ExecGenerateMarkdownDocs(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
-                // Intentar obtener el objeto desde la parte que se está editando actualmente
-                // Esto depende de la librería LSI.Packages.Extensiones.Utilidades
-                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
-                KBObject currentObject = currentPart?.KBObject;
+                KBObject currentObject = null;
+
+                // 1. Intentar obtener de la selección del contexto del comando (KB Explorer)
+                if (commandData.ContextType == CommandData.CmdContextType.selection && commandData.Context != null)
+                {
+                    if (commandData.Context is System.Collections.IEnumerable selection)
+                    {
+                        foreach (object selObj in selection)
+                        {
+                            if (selObj is KBObject kbObj)
+                            {
+                                currentObject = kbObj;
+                                break;
+                            }
+                        }
+                    }
+                    else if (commandData.Context is KBObject directObj)
+                    {
+                        currentObject = directObj;
+                    }
+                }
+
+                // 2. Si no hay selección en el contexto, intentar con la parte activa del editor
+                if (currentObject == null)
+                {
+                    KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                    currentObject = currentPart?.KBObject;
+                }
 
                 if (currentObject == null)
                 {
-                    Utils.ShowError("No hay ningún objeto abierto y activo en el editor.\nPor favor, abra el objeto (Procedimiento/Transacción) que desea documentar y asegúrese de tener el foco en él.");
+                    Utils.ShowError("No se pudo identificar el objeto para documentar.\nPor favor, seleccione un objeto en el KB Explorer o abra uno en el editor.");
                     return;
                 }
 

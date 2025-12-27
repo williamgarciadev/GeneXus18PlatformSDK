@@ -40,7 +40,13 @@
       <Group id="ContextCommandsGroup">
         <Command refid="WGExtractProcedure" />
         <Command refid="WGExtractVariable" />
+        <Command refid="CmdGenerateMarkdownDocs" />
       </Group>
+    </Group>
+
+    <!-- Grupo para el menú contextual del objeto en el KB Explorer -->
+    <Group refid="ObjectContext" package="2a56ea74-1a89-403d-b409-56324d204787">
+       <Command refid="CmdGenerateMarkdownDocs" />
     </Group>
   </Groups>
 
