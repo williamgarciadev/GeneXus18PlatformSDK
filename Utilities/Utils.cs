@@ -35,12 +35,42 @@ namespace Acme.Packages.Menu.Utilities
 
         public static string GetSelectedTextSafe(CommandData commandData)
         {
+            // 1. Intentar con la extensión de LSI (si está disponible y funciona)
             string selectedText = CommandDataExtensions.LsiGetSelectedText(commandData);
-            if (string.IsNullOrWhiteSpace(selectedText))
+            if (!string.IsNullOrWhiteSpace(selectedText))
+                return selectedText;
+
+            // 2. Intentar accediendo directamente al Editor activo de GeneXus
+            try 
+            {
+                if (UIServices.EditorManager != null && UIServices.DocumentManager.ActiveDocument != null)
+                {
+                    // Obtener la vista activa del documento
+                    var view = UIServices.EditorManager.GetEditor(UIServices.DocumentManager.ActiveDocument.Object.Guid) as ITextEditor;
+                    if (view != null)
+                    {
+                        // ITextEditor suele tener métodos para selección, pero depende de la implementación específica
+                        // Si no es ITextEditor estándar, podríamos intentar reflexión o interfaces comunes
+                        // Por ahora, confiamos más en el portapapeles como fallback universal
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error intentando acceder al editor directamente: {ex.Message}");
+            }
+
+            // 3. Fallback: Usar el portapapeles (Simular Ctrl+C)
+            try
             {
                 UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Copy);
                 selectedText = Clipboard.GetText().Trim();
             }
+            catch (Exception ex)
+            {
+                Log($"Error al intentar copiar del portapapeles: {ex.Message}");
+            }
+            
             return selectedText;
         }
 

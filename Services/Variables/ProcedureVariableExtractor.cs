@@ -29,7 +29,7 @@ namespace Acme.Packages.Menu.Services.Variables
             var selectedText = Utils.GetSelectedTextSafe(commandData);
             if (string.IsNullOrWhiteSpace(selectedText))
             {
-                throw new ArgumentException("No se pudo obtener texto válido.");
+                throw new ArgumentException("No se detectó ningún texto seleccionado.\n\nPor favor:\n1. Abra un objeto (Procedimiento/Transacción).\n2. Seleccione el código o las variables que desea procesar.\n3. Ejecute el comando nuevamente.");
             }
             return selectedText;
         }
