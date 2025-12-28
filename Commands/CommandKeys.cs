@@ -18,6 +18,8 @@ namespace Acme.Packages.Menu
         public static CommandKey CmdCleanUnusedVariables = new CommandKey(MenuPackage.guid, "CmdCleanUnusedVariables");
         public static CommandKey CmdSmartFixVariables = new CommandKey(MenuPackage.guid, "CmdSmartFixVariables");
         public static CommandKey CmdTraceVariable = new CommandKey(MenuPackage.guid, "CmdTraceVariable");
+        public static CommandKey CmdGoToSubroutine = new CommandKey(MenuPackage.guid, "CmdGoToSubroutine");
+        public static CommandKey CmdFindUnreferencedObjects = new CommandKey(MenuPackage.guid, "CmdFindUnreferencedObjects");
 
 
 

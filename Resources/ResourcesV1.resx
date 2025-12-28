@@ -129,4 +129,34 @@
   <data name="WGExtractVariable_Name" xml:space="preserve">
     <value>Agregar Variable</value>
   </data>
+  <data name="CmdFindUnreferencedObjects_Name" xml:space="preserve">
+    <value>Buscar Objetos No Referenciados</value>
+  </data>
+  <data name="CmdExportTableStructure_Name" xml:space="preserve">
+    <value>Exportar Estructura Tablas</value>
+  </data>
+  <data name="CmdExportProcedureSource_Name" xml:space="preserve">
+    <value>Exportar Source Procedimientos</value>
+  </data>
+  <data name="CmdCountCodeLines_Name" xml:space="preserve">
+    <value>Contar Líneas de Código</value>
+  </data>
+  <data name="CmdExportObjectsWithSourceLines_Name" xml:space="preserve">
+    <value>Exportar Objetos con Líneas</value>
+  </data>
+  <data name="CmdGenerateMarkdownDocs_Name" xml:space="preserve">
+    <value>Generar Documentación Markdown</value>
+  </data>
+  <data name="CmdCleanUnusedVariables_Name" xml:space="preserve">
+    <value>Limpiar Variables No Usadas</value>
+  </data>
+  <data name="CmdSmartFixVariables_Name" xml:space="preserve">
+    <value>Smart Fix Variables</value>
+  </data>
+  <data name="CmdTraceVariable_Name" xml:space="preserve">
+    <value>Rastrear Variable</value>
+  </data>
+  <data name="CmdGoToSubroutine_Name" xml:space="preserve">
+    <value>Ir a Subrutina</value>
+  </data>
 </root>

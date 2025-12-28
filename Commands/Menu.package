@@ -22,6 +22,8 @@
     <CommandDefinition id="CmdCleanUnusedVariables" resourceId="CmdCleanUnusedVariables_Name" />
     <CommandDefinition id="CmdSmartFixVariables" resourceId="CmdSmartFixVariables_Name" shortcut="CtrlShiftF" />
     <CommandDefinition id="CmdTraceVariable" resourceId="CmdTraceVariable_Name" shortcut="CtrlShiftV" />
+    <CommandDefinition id="CmdGoToSubroutine" resourceId="CmdGoToSubroutine_Name" />
+    <CommandDefinition id="CmdFindUnreferencedObjects" resourceId="CmdFindUnreferencedObjects_Name" />
 
   </Commands>
 
@@ -39,6 +41,8 @@
       <Command refid="CmdCleanUnusedVariables" />
       <Command refid="CmdSmartFixVariables" />
       <Command refid="CmdTraceVariable" />
+      <Command refid="CmdGoToSubroutine" />
+      <Command refid="CmdFindUnreferencedObjects" />
     </Group>
 
     <!-- Grupo para el menú contextual del editor -->
@@ -50,6 +54,7 @@
         <Command refid="CmdCleanUnusedVariables" />
         <Command refid="CmdSmartFixVariables" />
         <Command refid="CmdTraceVariable" />
+        <Command refid="CmdGoToSubroutine" />
       </Group>
     </Group>
 

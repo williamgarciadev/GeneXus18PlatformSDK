@@ -22,12 +22,12 @@ El objetivo es crear una funcionalidad que permita generar documentación técni
 - [x] **Refactorización Final**: Asegurar que todo cumpla con SOLID y limpiar código. <!-- id: 8 -->
 
 ## 🧹 Fase 5: Limpiador de Variables Locales (NUEVO)
-- [ ] **Definir Interfaz**: Crear `Core/Domain/Interfaces/IVariableCleanerService.cs`. <!-- id: 9 -->
-- [ ] **Implementar Lógica**: Crear `Core/Application/Services/VariableCleanerService.cs`. <!-- id: 10 -->
+- [x] **Definir Interfaz**: Crear `Core/Domain/Interfaces/IVariableCleanerService.cs`. <!-- id: 9 -->
+- [x] **Implementar Lógica**: Crear `Core/Application/Services/VariableCleanerService.cs`. <!-- id: 10 -->
     - Escanear Source, Rules y Events.
     - Filtrar variables estándar y de sistema.
     - Eliminar variables sin referencias.
-- [ ] **Integrar Comando**: Agregar "Limpiar Variables No Usadas" al menú contextual. <!-- id: 11 -->
+- [x] **Integrar Comando**: Agregar "Limpiar Variables No Usadas" al menú contextual. <!-- id: 11 -->
 
 ## 🔍 Fase 6: Rastreador de Variable (Variable Tracer)
 - [x] **Diseñar UI de Rastreo**: Crear formulario para mostrar ocurrencias. <!-- id: 12 -->

@@ -302,11 +302,14 @@
     <Compile Include="Core\Domain\Interfaces\IVariableCleanerService.cs" />
     <Compile Include="Core\Domain\Interfaces\ISmartVariableService.cs" />
     <Compile Include="Core\Domain\Interfaces\IVariableTracerService.cs" />
+    <Compile Include="Core\Domain\Interfaces\ISubroutineNavigatorService.cs" />
     <Compile Include="Core\Infrastructure\Formatters\MarkdownDocumentationFormatter.cs" />
     <Compile Include="Core\Application\Services\DocumentationService.cs" />
     <Compile Include="Core\Application\Services\VariableCleanerService.cs" />
     <Compile Include="Core\Application\Services\SmartVariableService.cs" />
     <Compile Include="Core\Application\Services\VariableTracerService.cs" />
+    <Compile Include="Core\Application\Services\SubroutineNavigatorService.cs" />
+    <Compile Include="Core\Application\Services\UnreferencedObjectsService.cs" />
     <Compile Include="UI\Forms\DocumentationPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -331,6 +334,7 @@
     <Compile Include="Services\Analysis\CodeAnalyzer.cs" />
     <Compile Include="Services\Analysis\LineAnalyzer.cs" />
     <Compile Include="Formatters\HistoryCsvFormatter.cs" />
+    <Compile Include="Core\Domain\Interfaces\IUnreferencedObjectsService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

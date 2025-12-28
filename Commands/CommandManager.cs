@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Common.Framework.Commands;
 using Acme.Packages.Menu.Services.Export;
@@ -12,106 +13,79 @@ using Acme.Packages.Menu.UI.Forms;
 using Artech.Architecture.Common.Objects;
 using Artech.Architecture.UI.Framework.Objects;
 using Artech.Common.Framework.Selection;
+using Artech.Genexus.Common.Parts;
+using System.Windows.Forms;
 
 namespace Acme.Packages.Menu
 {
-    /// <summary>
-    /// Gestor central de comandos del plugin Menu para GeneXus
-    /// </summary>
     class CommandManager : CommandDelegator
     {
-        #region Constructor
-
         public CommandManager()
         {
             RegisterCommands();
         }
 
-        #endregion
-
-        #region Command Registration
-
-        /// <summary>
-        /// Registra todos los comandos disponibles en el plugin
-        /// </summary>
         private void RegisterCommands()
         {
-            AddCommand(CommandKeys.CmdGenerateLogDebugForm,
-                new ExecHandler(ExecGenerateLogDebugFormCommand),
-                new QueryHandler(QueryGenerateLogDebugFormCommand));
-
-            AddCommand(CommandKeys.WGExtractVariable,
-                new ExecHandler(ExecWGExtractVariableCommand),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.WGExtractProcedure,
-                new ExecHandler(ExecWGExtractProcedureCommand),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.ShowObjectHistory,
-                new ExecHandler(ExecShowObjectHistory),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.CmdExportTableStructure,
-                new ExecHandler(ExecExportTableStructure),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.CmdExportProcedureSource,
-                new ExecHandler(ExecExportProcedureSource),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.CmdCountCodeLines,
-                new ExecHandler(ExecCountCodeLines),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.CmdExportObjectsWithSourceLines,
-                new ExecHandler(ExecExportObjectsWithSourceLines),
-                new QueryHandler(QueryAlwaysEnabled));
-
-            AddCommand(CommandKeys.CmdGenerateMarkdownDocs,
-                new ExecHandler(ExecGenerateMarkdownDocs),
-                new QueryHandler(QueryGenerateLogDebugFormCommand));
-
-            AddCommand(CommandKeys.CmdCleanUnusedVariables,
-                new ExecHandler(ExecCleanUnusedVariables),
-                new QueryHandler(QueryGenerateLogDebugFormCommand));
-
-            AddCommand(CommandKeys.CmdSmartFixVariables,
-                new ExecHandler(ExecSmartFixVariables),
-                new QueryHandler(QueryGenerateLogDebugFormCommand));
-
-            AddCommand(CommandKeys.CmdTraceVariable,
-                new ExecHandler(ExecTraceVariable),
-                new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdGenerateLogDebugForm, new ExecHandler(ExecGenerateLogDebugFormCommand), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.WGExtractVariable, new ExecHandler(ExecWGExtractVariableCommand), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.WGExtractProcedure, new ExecHandler(ExecWGExtractProcedureCommand), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.ShowObjectHistory, new ExecHandler(ExecShowObjectHistory), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdExportTableStructure, new ExecHandler(ExecExportTableStructure), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdExportProcedureSource, new ExecHandler(ExecExportProcedureSource), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdCountCodeLines, new ExecHandler(ExecCountCodeLines), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdExportObjectsWithSourceLines, new ExecHandler(ExecExportObjectsWithSourceLines), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdGenerateMarkdownDocs, new ExecHandler(ExecGenerateMarkdownDocs), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.CmdCleanUnusedVariables, new ExecHandler(ExecCleanUnusedVariables), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.CmdSmartFixVariables, new ExecHandler(ExecSmartFixVariables), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.CmdTraceVariable, new ExecHandler(ExecTraceVariable), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdGoToSubroutine, new ExecHandler(ExecGoToSubroutine), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdFindUnreferencedObjects, new ExecHandler(ExecFindUnreferencedObjects), new QueryHandler(QueryGenerateLogDebugFormCommand));
         }
 
-        #endregion
-
-        #region Helper for Selection
+        private bool ExecFindUnreferencedObjects(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                if (UIServices.KB.CurrentModel == null) return;
+                
+                var service = ServiceFactory.GetUnreferencedObjectsService();
+                Utils.Log("🔎 Buscando objetos no referenciados...");
+                var unreferenced = service.GetUnreferencedObjects(UIServices.KB.CurrentModel);
+                
+                if (unreferenced.Count > 0)
+                {
+                    Utils.Log($"❌ Se encontraron {unreferenced.Count} objetos no referenciados.");
+                    // Aquí podríamos mostrar un formulario con los resultados
+                    // Por ahora solo logueamos
+                    foreach (var obj in unreferenced)
+                    {
+                        Utils.Log($"   - {obj.TypeDescriptor.Name}: {obj.Name}");
+                    }
+                    Utils.ShowInfo($"Se encontraron {unreferenced.Count} objetos no referenciados. Ver Output.", "Limpieza KB");
+                }
+                else
+                {
+                    Utils.ShowInfo("✅ No se encontraron objetos no referenciados (relevantes).", "Limpieza KB");
+                }
+            }, "buscar objetos no referenciados");
+        }
 
         private KBObject GetObjectFromContext(CommandData commandData)
         {
             KBObject found = null;
-
             if (commandData != null && commandData.Context != null)
             {
                 object context = commandData.Context;
-                Utils.Log("🔍 Analizando contexto: " + context.GetType().FullName);
-
                 found = ExtractKBObject(context);
-
-                if (found == null && context is ISelectionContainer container)
+                if (found == null && context is ISelectionContainer container && container.SelectedObjects != null)
                 {
-                    if (container.SelectedObjects != null)
+                    foreach (object selObj in container.SelectedObjects)
                     {
-                        foreach (object selObj in container.SelectedObjects)
-                        {
-                            found = ExtractKBObject(selObj);
-                            if (found != null) break;
-                        }
+                        found = ExtractKBObject(selObj);
+                        if (found != null) break;
                     }
                 }
-
                 if (found == null && context is System.Collections.IEnumerable selection)
                 {
                     foreach (object selObj in selection)
@@ -121,13 +95,7 @@ namespace Acme.Packages.Menu
                     }
                 }
             }
-
-            if (found == null)
-            {
-                Utils.Log("🔍 Contexto no identificado, intentando fallback de editor activo...");
-                found = ExtractKBObject(null);
-            }
-
+            if (found == null) found = ExtractKBObject(null);
             return found;
         }
 
@@ -139,232 +107,55 @@ namespace Acme.Packages.Menu
                 if (obj is KBObjectPart part) return part.KBObject;
                 if (obj is IGxDocument doc) return doc.Object;
             }
-
             try
             {
                 KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
                 if (currentPart != null) return currentPart.KBObject;
             }
-            catch {{}}
-
+            catch (Exception) { }
             return null;
         }
 
-        #endregion
-
-        #region Export Commands
-
-        /// <summary>
-        /// Limpia las variables no utilizadas del objeto actual
-        /// </summary>
         private bool ExecCleanUnusedVariables(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
                 KBObject currentObject = GetObjectFromContext(commandData);
-
-                if (currentObject == null)
-                {
-                    Utils.ShowError("No se pudo identificar el objeto para limpiar.\nPor favor, asegúrese de seleccionar un objeto en el KB Explorer o tener uno abierto.");
-                    return;
-                }
-
+                if (currentObject == null) { Utils.ShowError("No se pudo identificar el objeto."); return; }
                 var cleaner = ServiceFactory.GetVariableCleanerService();
                 int removed = cleaner.CleanUnusedVariables(currentObject);
-
-                if (removed > 0)
-                {
-                    Utils.ShowInfo($"✅ Se eliminaron {removed} variables no utilizadas en '{currentObject.Name}'.", "Limpieza Completada");
-                }
-                else
-                {
-                    Utils.ShowInfo("No se encontraron variables no utilizadas para eliminar.", "Limpieza Completada");
-                }
+                Utils.ShowInfo(removed > 0 ? "Se eliminaron " + removed + " variables." : "No se encontraron variables no utilizadas.", "Limpieza");
             }, "limpiar variables no usadas");
         }
 
-        /// <summary>
-        /// Genera documentación en Markdown para el objeto seleccionado
-        /// </summary>
         private bool ExecGenerateMarkdownDocs(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
                 KBObject currentObject = GetObjectFromContext(commandData);
-
-                if (currentObject == null)
-                {
-                    Utils.ShowError("No se pudo identificar el objeto para documentar.\nPor favor, seleccione un objeto en el KB Explorer o abra uno en el editor.");
-                    return;
-                }
-
+                if (currentObject == null) { Utils.ShowError("No se pudo identificar el objeto."); return; }
                 var docService = ServiceFactory.GetDocumentationService();
                 var formatter = ServiceFactory.GetDocumentationFormatter();
-
                 var docData = docService.ExtractDocumentation(currentObject);
                 var markdown = formatter.Format(docData);
-
-                var previewForm = new DocumentationPreviewForm(markdown, currentObject.Name);
-                previewForm.ShowDialog();
+                new DocumentationPreviewForm(markdown, currentObject.Name).ShowDialog();
             }, "generar documentación markdown");
         }
 
-        /// <summary>
-        /// Exporta la estructura de tablas de todas las transacciones
-        /// </summary>
-        private bool ExecExportTableStructure(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                ExtractorTablasGX.ExportarEstructuraTablas();
-            }, "exportar estructura de tablas");
-        }
-
-        /// <summary>
-        /// Exporta el código fuente de todos los procedimientos
-        /// </summary>
-        private bool ExecExportProcedureSource(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                ProcedureSourceExtractor.ExportarSourceCodeProcedimientos();
-            }, "exportar código fuente de procedimientos");
-        }
-
-        /// <summary>
-        /// Muestra formulario interactivo para contar líneas de código
-        /// </summary>
-        private bool ExecCountCodeLines(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                var lineCounter = new CodeLineCounter();
-                lineCounter.ShowCodeLineCountForm();
-            }, "mostrar contador de líneas de código");
-        }
-
-        /// <summary>
-        /// Exporta objetos con líneas operativas a CSV y archivos individuales de código fuente
-        /// </summary>
-        private bool ExecExportObjectsWithSourceLines(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                ObjectSourceLineExporter.ExportarObjetosConLineasOperativas();
-            }, "exportar objetos con líneas operativas y código fuente");
-        }
-
-        /// <summary>
-        /// Exporta el historial completo de objetos de la KB
-        /// </summary>
-        private bool ExecShowObjectHistory(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                var historyExporter = new ObjectHistoryExporter();
-                historyExporter.ExportToCSV();
-            }, "exportar historial de objetos");
-        }
-
-        #endregion
-
-        #region Variable Extraction Commands
-
-        /// <summary>
-        /// Genera formulario para crear líneas de debug con variables
-        /// </summary>
-        public bool ExecGenerateLogDebugFormCommand(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                var debugGenerator = new DebugCodeGenerator();
-                debugGenerator.ShowInputFormAndGenerate();
-            }, "generar líneas de debug");
-        }
-
-        /// <summary>
-        /// Extrae e inteligentemente crea una variable basada en texto seleccionado
-        /// </summary>
-        private bool ExecWGExtractVariableCommand(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                var variableExtractor = new VariableExtractor();
-                variableExtractor.ExtractFromSelection(commandData);
-            }, "extraer variable inteligente");
-        }
-
-        /// <summary>
-        /// Extrae variables de texto seleccionado y genera código de logging
-        /// </summary>
-        private bool ExecWGExtractProcedureCommand(CommandData commandData)
-        {
-            return ExecuteWithErrorHandling(() =>
-            {
-                var procedureExtractor = new ProcedureVariableExtractor();
-                procedureExtractor.ExtractAndGenerateCode(commandData);
-            }, "extraer variables de procedimiento");
-        }
-
-        #endregion
-
-        #region Query Handlers
-
-        private bool QueryAlwaysEnabled(CommandData commandData, ref CommandStatus status)
-        {
-            status.State = CommandState.Enabled;
-            return true;
-        }
-
-        private bool QueryGenerateLogDebugFormCommand(CommandData commandData, ref CommandStatus status)
-        {
-            status.State = UIServices.KB?.CurrentKB != null
-                ? CommandState.Enabled
-                : CommandState.Disabled;
-            return true;
-        }
-
-        #endregion
-
-        #region Smart Fix Commands
-
-        /// <summary>
-        /// Rastrear una variable seleccionada en todo el objeto actual.
-        /// </summary>
         private bool ExecTraceVariable(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
                 string selectedVar = Utils.GetSelectedTextSafe(commandData);
-                if (string.IsNullOrEmpty(selectedVar))
-                {
-                    Utils.ShowError("Por favor, seleccione el nombre de una variable en el código para rastrear.");
-                    return;
-                }
-
+                if (string.IsNullOrEmpty(selectedVar)) { Utils.ShowError("Seleccione una variable."); return; }
                 if (!selectedVar.StartsWith("&")) selectedVar = "&" + selectedVar;
-
                 KBObject currentObject = GetObjectFromContext(commandData);
-                if (currentObject == null)
-                {
-                    Utils.ShowError("No se pudo identificar el objeto para rastrear.");
-                    return;
-                }
-
-                var tracer = ServiceFactory.GetVariableTracerService();
-                var traces = tracer.GetOccurrences(currentObject, selectedVar);
-
-                if (traces.Count == 0)
-                {
-                    Utils.ShowInfo($"No se encontraron ocurrencias de '{selectedVar}' en el código activo.", "Rastreador");
-                    return;
-                }
-
+                if (currentObject == null) { Utils.ShowError("Objeto no identificado."); return; }
+                var traces = ServiceFactory.GetVariableTracerService().GetOccurrences(currentObject, selectedVar);
+                if (traces.Count == 0) { Utils.ShowInfo("No hay ocurrencias.", "Rastreador"); return; }
                 using (var tracerForm = new VariableTracerForm(selectedVar, traces))
                 {
-                    tracerForm.OnJumpToCode += (trace) => {
-                        JumpToLine(currentObject, trace);
-                    };
+                    tracerForm.OnJumpToCode += (trace) => JumpToLine(currentObject, trace);
                     tracerForm.ShowDialog();
                 }
             }, "rastrear variable");
@@ -372,133 +163,270 @@ namespace Acme.Packages.Menu
 
         private void JumpToLine(KBObject obj, VariableOccurrenceDto trace)
         {
+            if (obj == null || trace == null) return;
+
+            // 1. Abrir y asegurar que el documento está en pantalla
+            try
+            {
+                if (UIServices.DocumentManager != null)
+                {
+                    UIServices.DocumentManager.OpenDocument(obj, new OpenDocumentOptions());
+                }
+            }
+            catch (Exception ex) { Utils.Log("⚠ Error abriendo documento: " + ex.Message); }
+            
+            // Pequeña pausa para que el IDE procese la apertura de la pestaña
+            System.Threading.Thread.Sleep(50);
+            Application.DoEvents();
+
+            // 2. Intentar salto vía Documento Activo (Método más estable en GX18)
             try 
+            {
+                if (UIServices.Environment != null && UIServices.Environment.ActiveDocument != null && UIServices.Environment.ActiveDocument.Object == obj)
+                {
+                    var activeDoc = UIServices.Environment.ActiveDocument;
+                    // Buscamos el método Select en el documento
+                    var selectMethod = activeDoc.GetType().GetMethod("Select", new Type[] { typeof(int), typeof(int), typeof(int) });
+                    if (selectMethod != null)
+                    {
+                        // Linea, Caracter, Largo
+                        selectMethod.Invoke(activeDoc, new object[] { trace.LineNumber, 1, 0 });
+                        Utils.Log("🚀 Salto ejecutado vía ActiveDocument.Select");
+                        return;
+                    }
+                }
+            } catch (Exception ex) { Utils.Log("⚠ Error en salto ActiveDocument: " + ex.Message); }
+
+            // 3. Si falla, intentar vía Editor de la Parte
+            try
             {
                 foreach (KBObjectPart part in obj.Parts)
                 {
-                    if (part.Name.Equals(trace.PartName, StringComparison.OrdinalIgnoreCase) || 
-                        part.TypeDescriptor.Name.Equals(trace.PartName, StringComparison.OrdinalIgnoreCase))
+                    if (part == null) continue;
+                    
+                    string partName = part.Name ?? "";
+                    string targetName = trace.PartName ?? "";
+
+                    bool nameMatch = partName.Equals(targetName, StringComparison.OrdinalIgnoreCase);
+                    bool typeMatch = false;
+                    
+                    if (!nameMatch && part.TypeDescriptor != null && part.TypeDescriptor.Name != null)
                     {
-                        UIServices.DocumentManager.OpenDocument(obj, new OpenDocumentOptions());
-                        
-                        try 
+                        typeMatch = part.TypeDescriptor.Name.Equals(targetName, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (nameMatch || typeMatch)
+                    {
+                        if (UIServices.EditorManager != null)
                         {
                             object editorObj = UIServices.EditorManager.GetEditor(part.Guid);
                             if (editorObj != null)
                             {
-                                System.Reflection.MethodInfo selectMethod = editorObj.GetType().GetMethod("Select", new Type[] { typeof(int), typeof(int) });
-                                if (selectMethod != null)
+                                Type eType = editorObj.GetType();
+                                
+                                // Probamos todas las combinaciones de salto conocidas
+                                var mGoTo = eType.GetMethod("GoTo", new Type[] { typeof(Artech.Common.Location.IPosition) }) ??
+                                            eType.GetMethod("SetPosition", new Type[] { typeof(int), typeof(int), typeof(int) }) ??
+                                            eType.GetMethod("Select", new Type[] { typeof(int), typeof(int) });
+
+                                if (mGoTo != null)
                                 {
-                                    selectMethod.Invoke(editorObj, new object[] { trace.LineNumber, 1 });
+                                    if (mGoTo.GetParameters().Length == 1) // GoTo(IPosition)
+                                    {
+                                        Type tPosType = typeof(Artech.Common.Location.IPosition).Assembly.GetType("Artech.Common.Location.TextPosition");
+                                        object tPos = Activator.CreateInstance(tPosType, new object[] { trace.LineNumber, 1 });
+                                        mGoTo.Invoke(editorObj, new object[] { tPos });
+                                    }
+                                    else if (mGoTo.GetParameters().Length == 3) // SetPosition(l, c, len)
+                                        mGoTo.Invoke(editorObj, new object[] { trace.LineNumber, 1, 0 });
+                                    else // Select(l, c)
+                                        mGoTo.Invoke(editorObj, new object[] { trace.LineNumber, 1 });
+
+                                    // FORZAR SCROLL
+                                    eType.GetMethod("ScrollToCaret")?.Invoke(editorObj, null);
+                                    eType.GetMethod("Focus")?.Invoke(editorObj, null);
+                                    Application.DoEvents();
                                 }
                             }
                         }
-                        catch {{}}
                         break;
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Utils.Log("No se pudo saltar a la línea: " + ex.Message);
-            }
+            catch (Exception ex) { Utils.Log("❌ Error en salto por Editor: " + ex.ToString()); }
         }
 
-        /// <summary>
-        /// Escanea el objeto actual y permite definir variables no declaradas masivamente.
-        /// </summary>
+        private bool ExecGoToSubroutine(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                // Prioridad absoluta a la selección real del editor (Estilo Descartes)
+                string selection = Utils.GetSelectedTextSafe(commandData);
+                
+                // Si no hay selección, intentar obtener la línea bajo el cursor
+                if (string.IsNullOrEmpty(selection)) selection = GetCurrentLineContext();
+
+                // Si aún no hay selección, intentar obtenerla vía Clipboard (Copy)
+                if (string.IsNullOrEmpty(selection)) selection = Utils.GetTextViaClipboard();
+                
+                if (string.IsNullOrEmpty(selection)) 
+                {
+                    Utils.ShowError("No se detectó ninguna selección ni subrutina bajo el cursor."); 
+                    return; 
+                }
+
+                string subName = ServiceFactory.GetSubroutineNavigatorService().CleanSubroutineName(selection);
+
+                // Intentar obtener la parte actual (LSI)
+                KBObjectPart currentPart = null;
+                try { currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart; } catch { }
+
+                // Fallback: Si LSI falla, intentar obtener el objeto del documento activo
+                KBObject currentObject = currentPart?.KBObject;
+                if (currentObject == null && UIServices.Environment.ActiveDocument != null)
+                {
+                    currentObject = UIServices.Environment.ActiveDocument.Object;
+                }
+
+                if (currentObject == null) { Utils.ShowError("No se pudo identificar el objeto activo."); return; }
+
+                // Si tenemos la parte específica, buscamos ahí primero
+                int line = -1;
+                string targetPartName = "";
+
+                if (currentPart != null)
+                {
+                    string source = GetPartSource(currentPart);
+                    if (!string.IsNullOrEmpty(source))
+                    {
+                        line = ServiceFactory.GetSubroutineNavigatorService().FindDefinitionLine(source, subName);
+                        targetPartName = currentPart.Name;
+                    }
+                }
+
+                // Si no encontramos en la parte actual (o no la tenemos), buscamos en todas las partes del objeto
+                if (line <= 0)
+                {
+                    foreach (KBObjectPart part in currentObject.Parts)
+                    {
+                        // Evitar buscar de nuevo en la misma parte si ya buscamos
+                        if (currentPart != null && part.Guid == currentPart.Guid) continue;
+
+                        string source = GetPartSource(part);
+                        if (!string.IsNullOrEmpty(source))
+                        {
+                            line = ServiceFactory.GetSubroutineNavigatorService().FindDefinitionLine(source, subName);
+                            if (line > 0)
+                            {
+                                targetPartName = part.Name;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (line > 0) 
+                {
+                    JumpToLine(currentObject, new VariableOccurrenceDto { LineNumber = line, PartName = targetPartName });
+                }
+                else 
+                {
+                    Utils.ShowWarning("No se encontró la definición de 'Sub " + subName + "' en el objeto " + currentObject.Name + ".", "Navegación");
+                }
+            }, "ir a definición de subrutina");
+        }
+
+        private string GetPartSource(KBObjectPart part)
+        {
+            try 
+            {
+                 if (part is ISource s) return s.Source;
+                 // Reflection fallback
+                 return part.GetType().GetProperty("Source")?.GetValue(part)?.ToString();
+            }
+            catch { return null; }
+        }
+
+        private string GetCurrentLineContext()
+        {
+            try
+            {
+                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                if (currentPart == null) return null;
+
+                object editorObj = UIServices.EditorManager.GetEditor(currentPart.Guid);
+                if (editorObj == null) return null;
+
+                // 1. Obtener el número de línea actual (Nivel SDK)
+                int lineNumber = -1;
+                var propPos = editorObj.GetType().GetProperty("CurrentPosition");
+                if (propPos != null)
+                {
+                    object posObj = propPos.GetValue(editorObj);
+                    if (posObj != null)
+                    {
+                        var propLine = posObj.GetType().GetProperty("Line");
+                        if (propLine != null) lineNumber = Convert.ToInt32(propLine.GetValue(posObj));
+                    }
+                }
+
+                if (lineNumber <= 0) return null;
+
+                // 2. Obtener el código de la parte actual
+                string source = "";
+                if (currentPart is ISource s) source = s.Source;
+                else source = currentPart.GetType().GetProperty("Source")?.GetValue(currentPart)?.ToString();
+
+                if (string.IsNullOrEmpty(source)) return null;
+
+                // 3. Extraer la línea exacta
+                string[] lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                if (lineNumber <= lines.Length)
+                {
+                    return lines[lineNumber - 1].Trim();
+                }
+            }
+            catch (Exception ex)
+            {
+                Utils.Log("❌ Error detectando línea: " + ex.Message);
+            }
+            return null;
+        }
+
+        private bool ExecExportTableStructure(CommandData commandData) { return ExecuteWithErrorHandling(() => ExtractorTablasGX.ExportarEstructuraTablas(), "exportar estructura"); }
+        private bool ExecExportProcedureSource(CommandData commandData) { return ExecuteWithErrorHandling(() => ProcedureSourceExtractor.ExportarSourceCodeProcedimientos(), "exportar source"); }
+        private bool ExecCountCodeLines(CommandData commandData) { return ExecuteWithErrorHandling(() => new CodeLineCounter().ShowCodeLineCountForm(), "contar líneas"); }
+        private bool ExecExportObjectsWithSourceLines(CommandData commandData) { return ExecuteWithErrorHandling(() => ObjectSourceLineExporter.ExportarObjetosConLineasOperativas(), "exportar objetos"); }
+        private bool ExecShowObjectHistory(CommandData commandData) { return ExecuteWithErrorHandling(() => new ObjectHistoryExporter().ExportToCSV(), "exportar historial"); }
+        public bool ExecGenerateLogDebugFormCommand(CommandData commandData) { return ExecuteWithErrorHandling(() => new DebugCodeGenerator().ShowInputFormAndGenerate(), "generar debug"); }
+        private bool ExecWGExtractVariableCommand(CommandData commandData) { return ExecuteWithErrorHandling(() => new VariableExtractor().ExtractFromSelection(commandData), "extraer variable"); }
+        private bool ExecWGExtractProcedureCommand(CommandData commandData) { return ExecuteWithErrorHandling(() => new ProcedureVariableExtractor().ExtractAndGenerateCode(commandData), "extraer variables proc"); }
         private bool ExecSmartFixVariables(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
                 KBObject currentObject = GetObjectFromContext(commandData);
-
-                if (currentObject == null)
-                {
-                    Utils.ShowError("No se pudo identificar el objeto para analizar.");
-                    return;
-                }
-
-                var smartService = ServiceFactory.GetSmartVariableService();
-                var undefinedVars = smartService.GetUndefinedVariables(currentObject);
-
-                if (!undefinedVars.Any())
-                {
-                    Utils.ShowInfo("No se detectaron variables sin definir en este objeto.", "Smart Fix");
-                    return;
-                }
-
+                if (currentObject == null) return;
+                var undefinedVars = ServiceFactory.GetSmartVariableService().GetUndefinedVariables(currentObject);
+                if (!undefinedVars.Any()) { Utils.ShowInfo("No hay variables huérfanas.", "Smart Fix"); return; }
                 using (var fixForm = new SmartFixVariablesForm(undefinedVars))
                 {
-                    if (fixForm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    if (fixForm.ShowDialog() == DialogResult.OK)
                     {
-                        smartService.DefineVariables(currentObject, fixForm.SelectedVariables);
-                        Utils.ShowInfo($"✅ Se crearon {fixForm.SelectedVariables.Count} variables exitosamente.", "Smart Fix Completado");
+                        ServiceFactory.GetSmartVariableService().DefineVariables(currentObject, fixForm.SelectedVariables);
+                        Utils.ShowInfo("Se crearon " + fixForm.SelectedVariables.Count + " variables.", "Éxito");
                     }
                 }
-            }, "auto-definir variables masivamente");
+            }, "smart fix");
         }
 
-        #endregion
+        private bool QueryAlwaysEnabled(CommandData commandData, ref CommandStatus status) { status.State = CommandState.Enabled; return true; }
+        private bool QueryGenerateLogDebugFormCommand(CommandData commandData, ref CommandStatus status) { status.State = UIServices.KB?.CurrentKB != null ? CommandState.Enabled : CommandState.Disabled; return true; }
 
-        #region Helper Methods
-
-        /// <summary>
-        /// Ejecuta una acción con manejo robusto y específico de errores
-        /// </summary>
-        /// <param name="action">Acción a ejecutar</param>
-        /// <param name="operationName">Nombre de la operación para logging</param>
-        /// <returns>True si la operación fue exitosa, false en caso contrario</returns>
         private bool ExecuteWithErrorHandling(Action action, string operationName)
         {
-            try
-            {
-                Utils.Log($"🔄 Iniciando operación: {operationName}");
-                action();
-                Utils.Log($"✅ Operación completada exitosamente: {operationName}");
-                return true;
-            }
-            catch (InvalidOperationException ex)
-            {
-                HandleSpecificError(ex, operationName, "Operación inválida");
-                return false;
-            }
-            catch (ArgumentException ex)
-            {
-                HandleSpecificError(ex, operationName, "Argumento inválido");
-                return false;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                HandleSpecificError(ex, operationName, "Acceso denegado");
-                return false;
-            }
-            catch (System.IO.IOException ex)
-            {
-                HandleSpecificError(ex, operationName, "Error de archivo/sistema");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                HandleGenericError(ex, operationName);
-                return false;
-            }
+            try { Utils.Log("🔄 Iniciando: " + operationName); action(); return true; }
+            catch (Exception ex) { Utils.Log("❌ Error en " + operationName + ": " + ex.Message); Utils.ShowError("Error en " + operationName + ": " + ex.Message); return false; }
         }
-
-        private void HandleSpecificError(Exception ex, string operationName, string errorType)
-        {
-            string errorMessage = $"❌ {errorType} al {operationName}: {ex.Message}";
-            Utils.ShowError($"{errorType}\n\nOperación: {operationName}\nDetalle: {ex.Message}");
-            Utils.Log($"{errorMessage}\nStackTrace: {ex.StackTrace}");
-        }
-
-        private void HandleGenericError(Exception ex, string operationName)
-        {
-            string errorMessage = $"❌ Error inesperado al {operationName}: {ex.Message}";
-            Utils.ShowError($"Error Inesperado\n\nOperación: {operationName}\nTipo: {ex.GetType().Name}\nDetalle: {ex.Message}");
-            Utils.Log($"{errorMessage}\nTipo: {ex.GetType().FullName}\nStackTrace: {ex.StackTrace}");
-        }
-
-        #endregion
     }
 }

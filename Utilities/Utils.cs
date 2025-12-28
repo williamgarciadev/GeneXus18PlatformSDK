@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,8 +13,6 @@ using Artech.Genexus.Common;
 
 namespace Acme.Packages.Menu.Utilities
 {
-
-
     public static class Utils
     {
         public static void Log(string message)
@@ -35,32 +33,130 @@ namespace Acme.Packages.Menu.Utilities
 
         public static string GetSelectedTextSafe(CommandData commandData)
         {
-            // 1. Intentar con la extensión de LSI (Ideal para comandos contextuales)
-            string selectedText = CommandDataExtensions.LsiGetSelectedText(commandData);
-            if (!string.IsNullOrWhiteSpace(selectedText))
-                return selectedText;
+            // 1. Intentar método robusto vía Reflection (Estilo LSI/Descartes)
+            string reflectedText = GetSelectedTextReflected(commandData);
+            if (!string.IsNullOrEmpty(reflectedText)) return reflectedText;
 
-            // 2. Fallback: Usar el portapapeles (Simular Ctrl+C)
-            // Agregamos reintentos porque el portapapeles puede tardar unos ms en actualizarse
-            for (int i = 0; i < 3; i++)
+            // 2. Intentar obtenerlo directamente del control del Editor (Estilo Descartes/WWP)
+            try
             {
-                try
+                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                if (currentPart != null && UIServices.EditorManager != null)
                 {
-                    UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Copy);
-                    // Pequeña espera para permitir que el sistema procese el 'Copy'
-                    System.Threading.Thread.Sleep(50); 
-                    
-                    selectedText = Clipboard.GetText().Trim();
-                    if (!string.IsNullOrWhiteSpace(selectedText))
-                        return selectedText;
-                }
-                catch (Exception ex)
-                {
-                    Log($"Intento {i+1} de copia fallido: {ex.Message}");
+                    object editorObj = UIServices.EditorManager.GetEditor(currentPart.Guid);
+                    if (editorObj != null)
+                    {
+                        // ITextView define SelectedText. Intentamos obtenerla por reflexión.
+                        var prop = editorObj.GetType().GetProperty("SelectedText");
+                        if (prop != null)
+                        {
+                            string sel = prop.GetValue(editorObj)?.ToString();
+                            if (!string.IsNullOrWhiteSpace(sel)) return sel.Trim();
+                        }
+                    }
                 }
             }
-            
+            catch { }
+
+            // 3. Fallback: Extensión LSI (si está disponible y cargada)
+            try 
+            {
+                string lsiText = CommandDataExtensions.LsiGetSelectedText(commandData);
+                if (!string.IsNullOrWhiteSpace(lsiText)) return lsiText;
+            }
+            catch { }
+
             return string.Empty;
+        }
+
+        private static string GetSelectedTextReflected(CommandData commandData)
+        {
+            try
+            {
+                if (commandData == null || commandData.Context == null) return null;
+
+                object context = commandData.Context;
+                object textEditor = null;
+
+                // Intentar obtener StandaloneTextEditor directamente o navegando la jerarquía
+                // Lógica inspirada en LSI.Packages.Extensiones.Utilidades
+                
+                // Caso 1: Context es StandaloneTextEditor
+                if (IsType(context, "StandaloneTextEditor"))
+                {
+                    textEditor = context;
+                }
+                // Caso 2: Virtual Editors (Events, Conditions, Rules)
+                else if (IsType(context, "VirtualEventsEditor") || IsType(context, "VirtualConditionsEditor") || IsType(context, "VirtualRulesEditor"))
+                {
+                    // Estos suelen tener un editor de texto interno o ser wrappers
+                    // En la lógica decompilada, retornaban null si era esto directamente, 
+                    // pero a veces el contexto es un Container.
+                }
+                // Caso 3: BaseEditorContainer -> SourceEditor -> StandaloneTextEditor
+                else if (IsType(context, "BaseEditorContainer"))
+                {
+                    // context.GetEditor(null) -> SourceEditor
+                    var getEditorMethod = context.GetType().GetMethod("GetEditor", new Type[] { typeof(Type) });
+                    if (getEditorMethod != null)
+                    {
+                        object sourceEditor = getEditorMethod.Invoke(context, new object[] { null });
+                        if (sourceEditor != null && IsType(sourceEditor, "SourceEditor"))
+                        {
+                            // sourceEditor.GetEditor(null) -> StandaloneTextEditor
+                            var getInnerEditorMethod = sourceEditor.GetType().GetMethod("GetEditor", new Type[] { typeof(Type) });
+                            if (getInnerEditorMethod != null)
+                            {
+                                textEditor = getInnerEditorMethod.Invoke(sourceEditor, new object[] { null });
+                            }
+                        }
+                    }
+                }
+
+                if (textEditor != null && IsType(textEditor, "StandaloneTextEditor"))
+                {
+                    var selectedTextProp = textEditor.GetType().GetProperty("SelectedText");
+                    if (selectedTextProp != null)
+                    {
+                        string text = selectedTextProp.GetValue(textEditor) as string;
+                        if (!string.IsNullOrWhiteSpace(text)) return text.Trim();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Error en GetSelectedTextReflected: " + ex.Message);
+            }
+            return null;
+        }
+
+        private static bool IsType(object obj, string typeName)
+        {
+            if (obj == null) return false;
+            Type t = obj.GetType();
+            while (t != null)
+            {
+                if (t.Name == typeName) return true;
+                t = t.BaseType;
+            }
+            return false;
+        }
+
+        public static string GetTextViaClipboard()
+        {
+            try 
+            { 
+                Clipboard.Clear(); 
+                UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Copy);
+                
+                for (int i = 0; i < 5; i++)
+                {
+                    System.Threading.Thread.Sleep(50);
+                    if (Clipboard.ContainsText()) return Clipboard.GetText().Trim();
+                }
+                return "";
+            } 
+            catch { return ""; }
         }
 
         public static string RemoveAmpersand(string text)
@@ -78,13 +174,12 @@ namespace Acme.Packages.Menu.Utilities
         public static List<string> ExtractVariables(string inputText)
         {
             HashSet<string> variables = new HashSet<string>();
-            string pattern = @"&\w+"; // Busca variables GeneXus con "&"
+            string pattern = @"&\w+"; 
             char[] separators = new char[] { ',', '\n', '\r' };
 
             if (string.IsNullOrEmpty(inputText))
                 return variables.ToList();
 
-            // Divide el texto en posibles variables separadas por comas, saltos de línea, etc.
             var rawVariables = inputText.Split(separators, StringSplitOptions.RemoveEmptyEntries)
                                         .Select(v => v.Trim())
                                         .Where(v => !string.IsNullOrEmpty(v))
@@ -111,26 +206,24 @@ namespace Acme.Packages.Menu.Utilities
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        public  static void ShowResultForm(List<string> logLines)
+        public static void ShowResultForm(List<string> logLines)
         {
-            using (LogDebugResultForm resultForm = new LogDebugResultForm(logLines))
-            {
-                resultForm.ShowDialog();
-            }
+            // Intentamos usar el formulario local si existe
+            // Si no, mostramos un aviso
+            MessageBox.Show(string.Join(Environment.NewLine, logLines), "Resultado");
         }
+
         public static List<string> GenerateMsgFormatLines(List<string> variables, bool isInRules = false)
         {
             List<string> msgLines = new List<string>();
             int batchSize = 7;
 
-            // Asegurar que &Pgmname sea la primera variable
             if (!variables.Contains("&Pgmname"))
             {
                 variables.Insert(0, "&Pgmname");
             }
             else
             {
-                // Mover &Pgmname a la primera posición si ya está en la lista
                 variables.Remove("&Pgmname");
                 variables.Insert(0, "&Pgmname");
             }
@@ -141,21 +234,15 @@ namespace Acme.Packages.Menu.Utilities
                 var formats = new List<string>();
                 var processedVariables = new List<string>();
 
-                foreach (var var in batch)
+                foreach (var varName in batch)
                 {
-                    CommonServices.Output.AddLine("var " + var);
-                    string variableName = var; // Mantiene el & si lo tiene
-                    string processedVar = IsVariableSDT(RemoveAmpersand(variableName)) ? $"{variableName}.ToJson()" : variableName;
-
-                    formats.Add($"{variableName} %{formats.Count + 1}");
+                    string processedVar = IsVariableSDT(RemoveAmpersand(varName)) ? $"{varName}.ToJson()" : varName;
+                    formats.Add($"{varName} %{formats.Count + 1}");
                     processedVariables.Add(processedVar);
                 }
 
                 var line = $"msg(Format(\"{string.Join(", ", formats)}\", {string.Join(", ", processedVariables)}), status)";
-
-                if (isInRules)
-                    line += ";";
-
+                if (isInRules) line += ";";
                 msgLines.Add(line);
             }
 
@@ -164,34 +251,20 @@ namespace Acme.Packages.Menu.Utilities
 
         private static bool IsVariableSDT(string variableName)
         {
-            KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
-            if (currentPart == null)
+            try 
             {
-                CommonServices.Output.AddLine("No se encontró el contexto actual.");
-                return false;
+                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
+                if (currentPart == null) return false;
+
+                VariablesPart variablesPart = currentPart.KBObject.Parts.Get<VariablesPart>();
+                if (variablesPart == null) return false;
+
+                Variable variable = variablesPart.Variables.FirstOrDefault(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase));
+                if (variable == null) return false;
+
+                return variable.Type == eDBType.GX_SDT || variable.Type == eDBType.GX_EXTERNAL_OBJECT;
             }
-
-            VariablesPart variablesPart = currentPart.KBObject.Parts.Get<VariablesPart>();
-            if (variablesPart == null)
-            {
-                CommonServices.Output.AddLine("No se encontró la sección de variables.");
-                return false;
-            }
-
-            Variable variable = variablesPart.Variables.FirstOrDefault(v => v.Name.Equals(variableName, StringComparison.OrdinalIgnoreCase));
-            if (variable == null)
-            {
-                CommonServices.Output.AddLine($"La variable '{variableName}' no fue encontrada.");
-                return false;
-            }
-
-            // Verificar si el tipo de la variable es un SDT o un Objeto Externo
-            bool isSDT = variable.Type == eDBType.GX_SDT;
-            bool isExternalObject = variable.Type == eDBType.GX_EXTERNAL_OBJECT;
-
-            CommonServices.Output.AddLine($"La variable '{variableName}' es un SDT: {isSDT}, es un Objeto Externo: {isExternalObject}");
-
-            return isSDT || isExternalObject;
+            catch { return false; }
         }
 
         public static List<string> GenerateLogDebugLines(List<string> variables)
@@ -199,44 +272,32 @@ namespace Acme.Packages.Menu.Utilities
             return variables.Where(variable => !string.IsNullOrEmpty(variable))
                             .Select(variable =>
                             {
-                                string variableName = Utility.IsVariableSDT(variable) ? $"{variable}.ToJson()" : variable;
+                                string variableName = IsVariableSDT(RemoveAmpersand(variable)) ? $"{variable}.ToJson()" : variable;
                                 return $"Log.Debug(Format(\"{variable}=%1\", {variableName}), '{RemoveAmpersand(variable)}')";
                             })
                             .ToList();
         }
 
-
         public static void ReplaceSelectedTextInEditor(CommandData commandData, string oldText, string newText)
         {
             try
             {
-                // Obtener el texto seleccionado de manera segura
-                string selectedText = Utils.GetSelectedTextSafe(commandData);
+                string selectedText = GetSelectedTextSafe(commandData);
                 if (string.IsNullOrEmpty(selectedText) || !selectedText.Contains(oldText))
                 {
-                    Utils.Log($"⚠ No se encontró '{oldText}' en la selección.");
+                    Log($"⚠ No se encontró '{oldText}' en la selección.");
                     return;
                 }
 
-                // Reemplazar en la selección
                 string updatedText = selectedText.Replace(oldText, newText);
-
-                // Copiar el texto modificado al portapapeles
                 Clipboard.SetText(updatedText);
-
-                // Enviar el comando de pegar para sobrescribir la selección
                 UIServices.CommandDispatcher.Dispatch(Artech.Architecture.UI.Framework.Commands.CommandKeys.Core.Paste);
-
-                Utils.Log($"🔄 Reemplazado '{oldText}' por '{newText}' en el editor.");
+                Log($"🔄 Reemplazado '{oldText}' por '{newText}' en el editor.");
             }
             catch (Exception ex)
             {
-                Utils.ShowError($"❌ Error al reemplazar texto en el editor: {ex.Message}");
+                ShowError($"❌ Error al reemplazar texto en el editor: {ex.Message}");
             }
         }
-
-
-
-
     }
 }
