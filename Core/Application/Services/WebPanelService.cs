@@ -10,6 +10,7 @@ using Artech.Architecture.UI.Framework.Services;
 using Artech.Genexus.Common.Objects;
 using Acme.Packages.Menu.Core.Domain.Interfaces;
 using Artech.Genexus.Common.Parts;
+using Artech.Common.Properties;
 
 namespace Acme.Packages.Menu.Core.Application.Services
 {
@@ -43,6 +44,15 @@ namespace Acme.Packages.Menu.Core.Application.Services
                     if (obj.TypeDescriptor.Name == "WebPanel")
                     {
                         webPanelsFound++;
+                        
+                        // --- DEBUG DIAGNOSTIC START ---
+                        // For the first WebPanel found, dump ALL info to the output window
+                        if (webPanelsFound == 1)
+                        {
+                            LogDeepDebugInfo(obj);
+                        }
+                        // --- DEBUG DIAGNOSTIC END ---
+
                         string formClass = GetFormClassValue(obj);
                         
                         results.Add(new WebPanelInfo { Name = obj.Name, Description = obj.Description, FormClass = formClass });
@@ -65,18 +75,85 @@ namespace Acme.Packages.Menu.Core.Application.Services
             }
         }
 
+        private void LogDeepDebugInfo(KBObject obj)
+        {
+            try
+            {
+                _logger.LogSuccess("**************************************************");
+                _logger.LogSuccess(string.Format("DIAGNOSTIC REPORT FOR: {0}", obj.Name));
+                _logger.LogSuccess("**************************************************");
+
+                _logger.LogSuccess("--- OBJECT PROPERTIES ---");
+                foreach (Property prop in obj.Properties)
+                {
+                    // Filter for 'class' related properties to keep log readable
+                    if (prop.Name.ToLower().Contains("class"))
+                        _logger.LogSuccess(string.Format("PROP: {0} = {1}", prop.Name, prop.Value));
+                }
+
+                WebFormPart webForm = obj.Parts.Get<WebFormPart>();
+                if (webForm != null)
+                {
+                    _logger.LogSuccess("--- WEBFORM PART PROPERTIES ---");
+                    foreach (Property prop in webForm.Properties)
+                    {
+                        if (prop.Name.ToLower().Contains("class"))
+                            _logger.LogSuccess(string.Format("PART PROP: {0} = {1}", prop.Name, prop.Value));
+                    }
+
+                    if (webForm is ISource sourcePart)
+                    {
+                        string src = sourcePart.Source;
+                        if (!string.IsNullOrEmpty(src))
+                        {
+                            _logger.LogSuccess("--- SOURCE PREVIEW (First 500 chars) ---");
+                            _logger.LogSuccess(src.Substring(0, Math.Min(src.Length, 500)));
+                            
+                            _logger.LogSuccess("--- REGEX TEST ---");
+                            var regexes = new string[] { 
+                                @"Name=\"FormClass\"\s+Value=\"([^\"]+)\"",
+                                @"Name=\"Class\"\s+Value=\"([^\"]+)\"",
+                                @"FormClass=\"([^\"]+)\"",
+                                @"Class=\"([^\"]+)\""
+                            };
+
+                            foreach(var pat in regexes)
+                            {
+                                var m = Regex.Match(src, pat, RegexOptions.IgnoreCase);
+                                if (m.Success)
+                                    _logger.LogSuccess(string.Format("MATCH FOUND for '{0}': {1}", pat, m.Groups[1].Value));
+                                else
+                                    _logger.LogWarning(string.Format("NO MATCH for '{0}'", pat));
+                            }
+                        }
+                        else
+                        {
+                             _logger.LogWarning("WebForm Source is empty.");
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("WebFormPart NOT FOUND on this object.");
+                }
+                _logger.LogSuccess("**************************************************");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error in Diagnostic: " + ex.Message);
+            }
+        }
+
         private string GetFormClassValue(KBObject obj)
         {
             try 
             {
-                // 1. Intentar propiedades directas
                 string val = GetPropString(obj, "FormClass");
                 if (!string.IsNullOrEmpty(val)) return val;
 
                 val = GetPropString(obj, "ThemeClass");
                 if (!string.IsNullOrEmpty(val)) return val;
 
-                // 2. Buscar en WebFormPart
                 WebFormPart webForm = obj.Parts.Get<WebFormPart>();
                 if (webForm != null)
                 {
@@ -86,8 +163,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
                     val = GetPropString(webForm, "ThemeClass");
                     if (!string.IsNullOrEmpty(val)) return val;
 
-                    // 3. Fallback: Analizar el XML del Layout directamente
-                    // Intentamos obtener el source casteando a ISource
                     string source = null;
                     if (webForm is ISource sourcePart)
                     {
@@ -96,17 +171,16 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
                     if (!string.IsNullOrEmpty(source))
                     {
-                        // Expresiones regulares con string verbatim (@) para evitar errores de escape
-                        var match = Regex.Match(source, @"Name=""FormClass""\s+Value=""([^""]+)""", RegexOptions.IgnoreCase);
+                        var match = Regex.Match(source, @"Name=\"FormClass\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Name=""Class""\s+Value=""([^""]+)""", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Name=\"Class\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"FormClass=""([^""]+)""", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"FormClass=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Class=""([^""]+)""", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Class=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
                     }
                 }
@@ -122,14 +196,12 @@ namespace Acme.Packages.Menu.Core.Application.Services
             {
                 if (obj == null) return null;
 
-                // Si es un KBObject
                 if (obj is KBObject kbObj)
                 {
                     object val = kbObj.GetPropertyValue(propName);
                     return val != null ? val.ToString() : null;
                 }
 
-                // Si es un KBObjectPart
                 if (obj is KBObjectPart kbPart)
                 {
                     object val = kbPart.GetPropertyValue(propName);
@@ -148,7 +220,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
                 string tempFile = Path.Combine(Path.GetTempPath(), "WebPanels_Report_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
                 var sb = new StringBuilder();
                 
-                // Header
                 sb.AppendLine("WebPanel Name;Description;Form Class");
 
                 foreach (var item in data)
@@ -172,7 +243,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
+            if (field.Contains(";") || field.Contains(""") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
             }

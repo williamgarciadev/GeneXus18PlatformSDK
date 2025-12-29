@@ -1,10 +1,17 @@
-# Plan de Trabajo - Listar Form Class de WebPanels (Fixes Sintaxis Final)
+# Plan de Trabajo - Diagnóstico de WebPanel Form Class
 
 ## Objetivo
-Corregir error de sintaxis en `WebPanelService.cs` detectado en la línea 175.
+Agregar un diagnóstico detallado para entender por qué la propiedad "Form Class" aparece vacía.
 
-## Correcciones
-- [x] **Error CS8370/CS8997/CS1026:** Se corrigió la secuencia de comillas incorrecta `field.Contains("""")` por la forma escapada correcta `field.Contains("\"")`.
+## Tareas
+- [x] **Implementar Modo Debug:**
+    - Al ejecutar el comando, para el **primer WebPanel encontrado**, se imprimirá en el Output de GeneXus:
+        - Todas las propiedades del Objeto relacionadas con "Class".
+        - Todas las propiedades de la parte WebForm relacionadas con "Class".
+        - Una muestra del código fuente (XML/HTML) del layout.
+        - Resultados de pruebas de Regex en tiempo real.
+    - Esto permitirá ver el nombre exacto de la propiedad interna.
+- [x] **Mantener Compatibilidad:** El código sigue siendo compatible con C# 7.3.
 
 ## Estado
-Listo para compilar.
+Listo para compilar y ejecutar diagnóstico.
