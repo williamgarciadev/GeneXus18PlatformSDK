@@ -109,10 +109,10 @@ namespace Acme.Packages.Menu.Core.Application.Services
                             
                             _logger.LogSuccess("--- REGEX TEST ---");
                             
-                            // USING STANDARD STRINGS TO AVOID COMPILER CONFUSION
+                            // ESCAPING BACKSLASHES FOR C# COMPILER (\s)
                             var regexes = new string[] { 
-                                "Name=\"FormClass\"\s+Value=\"([^\"]+)\"",
-                                "Name=\"Class\"\s+Value=\"([^\"]+)\"",
+                                "Name=\"FormClass\"\\s+Value=\"([^\"]+)\"",
+                                "Name=\"Class\"\\s+Value=\"([^\"]+)\"",
                                 "FormClass=\"([^\"]+)\"",
                                 "Class=\"([^\"]+)\""
                             };
@@ -171,11 +171,11 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
                     if (!string.IsNullOrEmpty(source))
                     {
-                        // USING STANDARD STRINGS TO AVOID COMPILER CONFUSION
-                        var match = Regex.Match(source, "Name=\"FormClass\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        // ESCAPING BACKSLASHES FOR C# COMPILER (\s)
+                        var match = Regex.Match(source, "Name=\"FormClass\"\\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, "Name=\"Class\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, "Name=\"Class\"\\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
                         match = Regex.Match(source, "FormClass=\"([^\"]+)\"", RegexOptions.IgnoreCase);
