@@ -108,12 +108,13 @@ namespace Acme.Packages.Menu.Core.Application.Services
                             _logger.LogSuccess(src.Substring(0, Math.Min(src.Length, 500)));
                             
                             _logger.LogSuccess("--- REGEX TEST ---");
-                            // Corregido: Array explícito compatible con C# 7.3
+                            
+                            // USING STANDARD STRINGS TO AVOID COMPILER CONFUSION
                             var regexes = new string[] { 
-                                @"Name=""FormClass""\s+Value=""([^""]+)"",
-                                @"Name=""Class""\s+Value=""([^""]+)"",
-                                @"FormClass=""([^""]+)"",
-                                @"Class=""([^""]+)""
+                                "Name=\"FormClass\"\s+Value=\"([^\"]+)\"",
+                                "Name=\"Class\"\s+Value=\"([^\"]+)\"",
+                                "FormClass=\"([^\"]+)\"",
+                                "Class=\"([^\"]+)\""
                             };
 
                             foreach(var pat in regexes)
@@ -170,17 +171,17 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
                     if (!string.IsNullOrEmpty(source))
                     {
-                        // Corregido: Strings verbatim estándar
-                        var match = Regex.Match(source, @"Name=""FormClass""\s+Value=""([^""]+)"", RegexOptions.IgnoreCase);
+                        // USING STANDARD STRINGS TO AVOID COMPILER CONFUSION
+                        var match = Regex.Match(source, "Name=\"FormClass\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Name=""Class""\s+Value=""([^""]+)"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, "Name=\"Class\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"FormClass=""([^""]+)"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, "FormClass=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Class=""([^""]+)"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, "Class=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
                     }
                 }
@@ -243,7 +244,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            // Corregido: Escape de comillas compatible
             if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
