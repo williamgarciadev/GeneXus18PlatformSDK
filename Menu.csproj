@@ -247,6 +247,7 @@
       <DependentUpon>Editor.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\EditorService.cs" />
+    <Compile Include="Services\EditorTextExtractor.cs" />
     <Compile Include="Services\EnvironmentInfo.cs" />
     <Compile Include="UI\Forms\Form1.cs">
       <SubType>Form</SubType>
@@ -292,9 +293,15 @@
     <Compile Include="Core\Domain\Interfaces\ITypeResolver.cs" />
     <Compile Include="Core\Domain\Interfaces\ILogger.cs" />
     <Compile Include="Core\Application\Services\VariableService.cs" />
+    <Compile Include="Core\Application\Services\WebPanelService.cs" />
     <Compile Include="Core\Infrastructure\GeneXus\GeneXusVariableRepository.cs" />
     <Compile Include="Core\Infrastructure\GeneXus\GeneXusTypeResolver.cs" />
     <Compile Include="Core\Infrastructure\Logging\ConsoleLogger.cs" />
+    <Compile Include="Core\Domain\DTOs\ExternalObjectDto.cs" />
+    <Compile Include="Core\Domain\Interfaces\IExternalObjectRepository.cs" />
+    <Compile Include="Core\Infrastructure\GeneXus\GeneXusExternalObjectRepository.cs" />
+    <Compile Include="Core\Infrastructure\Formatters\ExternalObjectCsvFormatter.cs" />
+    <Compile Include="Core\Application\Services\InventoryService.cs" />
     <Compile Include="Core\Domain\DTOs\ObjectDocumentationDto.cs" />
     <Compile Include="Core\Domain\DTOs\VariableOccurrenceDto.cs" />
     <Compile Include="Core\Domain\Interfaces\IDocumentationFormatter.cs" />
@@ -396,6 +403,7 @@
     <Content Include="Utilities\MenProperties.txt" />
     <None Include="Resources\Images\Icon1.ico" />
     <None Include="Resources\Images\Image1.png" />
+    <None Include="DISCOVERIES.md" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

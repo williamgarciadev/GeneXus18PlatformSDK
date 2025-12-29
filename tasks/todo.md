@@ -1,19 +1,18 @@
-# Plan de Trabajo - Listar Form Class de WebPanels
+# Plan de Trabajo - Listar Form Class de WebPanels (Exportar a Excel)
 
 ## Objetivo
-Implementar una opción en el menú "Commands" que liste la propiedad "Form Class" de todos los WebPanels de la KB.
+Mejorar la funcionalidad de listado de "Form Class" para exportar los resultados a un archivo Excel (.csv compatible) y solucionar el error de compilación.
 
 ## Tareas
 
-- [x] Analizar el código existente para entender cómo iterar objetos y obtener propiedades.
-- [x] Crear servicio `Core/Application/Services/WebPanelService.cs` con la lógica de extracción.
-- [x] Actualizar `Common/Factories/ServiceFactory.cs` para inyectar el nuevo servicio.
-- [x] Definir la clave del comando en `Commands/CommandKeys.cs`.
-- [x] Agregar el recurso de texto en `Resources/ResourcesV1.resx`.
-- [x] Registrar el comando en `Commands/Menu.package`.
-- [x] Implementar el handler en `Commands/CommandManager.cs`.
-- [x] Verificar la compilación (Skipped due to missing msbuild).
+- [x] Corregir error CS0246 incluyendo `Core/Application/Services/WebPanelService.cs` en `Menu.csproj`.
+- [x] Refactorizar `WebPanelService.cs`:
+    - [x] Crear estructura `WebPanelInfo`.
+    - [x] Implementar lógica de generación de CSV con BOM UTF-8 y separador `;`.
+    - [x] Implementar apertura automática del archivo generado.
+- [x] Actualizar `CommandManager.cs` para llamar al nuevo método `ListFormClassPropertyAndExport`.
+- [x] Verificar compilación (manualmente vía revisión de archivos).
 
 ## Detalles de Implementación
-- Se busca la propiedad "FormClass", "ThemeClass" o "Class" tanto en el objeto WebPanel como en su parte WebForm.
-- La salida se dirige al Output de GeneXus usando `ILogger`.
+- Se usa CSV con encoding UTF-8 BOM y punto y coma (`;`) como separador para máxima compatibilidad con Excel en configuraciones regionales españolas/latinas.
+- El archivo temporal se crea en `%TEMP%` y se lanza `Process.Start` para que el SO lo abra con la aplicación predeterminada (Excel).

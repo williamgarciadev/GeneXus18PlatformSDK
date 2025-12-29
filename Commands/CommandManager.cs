@@ -55,7 +55,7 @@ namespace Acme.Packages.Menu
             return ExecuteWithErrorHandling(() =>
             {
                 var service = ServiceFactory.GetWebPanelService();
-                service.ListFormClassProperty();
+                service.ListFormClassPropertyAndExport();
             }, "listar form class webpanels");
         }
 
