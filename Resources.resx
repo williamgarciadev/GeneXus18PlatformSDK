@@ -141,6 +141,15 @@
   <data name="CmdTraceVariable_Name" xml:space="preserve">
     <value>Rastrear Variable (Lectura/Escritura)</value>
   </data>
+  <data name="CmdGoToSubroutine_Name" xml:space="preserve">
+    <value>Ir a Definición de Subrutina</value>
+  </data>
+  <data name="CmdBackFromGoTo_Name" xml:space="preserve">
+    <value>Volver de Definición</value>
+  </data>
+  <data name="CmdFindUnreferencedObjects_Name" xml:space="preserve">
+    <value>Encontrar Objetos No Referenciados</value>
+  </data>
   <data name="CmdGenerateLogDebug_Name" xml:space="preserve">
     <value>Generar Log</value>
   </data>
@@ -170,5 +179,11 @@
   </data>
   <data name="YetAnotherCommand" xml:space="preserve">
     <value>&amp;Yet Another Command</value>
+  </data>
+  <data name="CmdInventoryExternalObjects_Name" xml:space="preserve">
+    <value>Inventario External Objects</value>
+  </data>
+  <data name="CmdListWebPanelFormClass_Name" xml:space="preserve">
+    <value>Listar WebPanel Form Class</value>
   </data>
 </root>

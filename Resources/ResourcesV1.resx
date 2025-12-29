@@ -165,7 +165,4 @@
   <data name="CmdInventoryExternalObjects_Name" xml:space="preserve">
     <value>Inventario External Objects</value>
   </data>
-  <data name="CmdListWebPanelFormClass_Name" xml:space="preserve">
-    <value>Listar WebPanel Form Class</value>
-  </data>
 </root>
