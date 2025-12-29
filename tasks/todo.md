@@ -1,12 +1,12 @@
-# Plan de Trabajo - Listar Form Class de WebPanels (Fixes Finales)
+# Plan de Trabajo - Listar Form Class de WebPanels (Fixes Sintaxis)
 
 ## Objetivo
-Solucionar errores de compilación y mejorar la extracción de la propiedad "Form Class".
+Corregir errores de sintaxis en `WebPanelService.cs` (escapado de strings y acceso a propiedades).
 
 ## Correcciones
-- [x] **Error CS1061 (WebFormPart.Layout):** Se eliminó la dependencia de `.Layout` y se reemplazó por un análisis directo del código fuente (`.Source`) usando expresiones regulares (Regex). Esto es más compatible y menos propenso a errores de versión del SDK.
-- [x] **Errores CS8370 (Strings):** Se eliminaron los literales de cadena modernos (`"""`) y se reemplazaron por strings estándar compatibles con C# 7.3 / .NET 4.7.
-- [x] **Lógica de Extracción:** Se implementó una búsqueda de patrones XML/HTML (`Name="FormClass" Value="..."`) para encontrar la propiedad incluso si no está expuesta directamente en el objeto de API.
+- [x] **Strings Regex:** Se usan strings verbatim (`@"..."`) para simplificar y corregir las expresiones regulares, evitando errores `CS1009`.
+- [x] **Acceso a Source:** Se usa el cast a `ISource` para acceder a `.Source` de forma segura, evitando `CS1061`.
+- [x] **IPropertiesObject:** Se eliminó la dependencia de `IPropertiesObject` y se reemplazó por comprobaciones directas de `KBObject` y `KBObjectPart`, evitando `CS0246`.
 
 ## Estado
 Listo para compilar y probar.

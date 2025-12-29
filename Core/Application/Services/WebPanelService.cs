@@ -87,26 +87,26 @@ namespace Acme.Packages.Menu.Core.Application.Services
                     if (!string.IsNullOrEmpty(val)) return val;
 
                     // 3. Fallback: Analizar el XML del Layout directamente
-                    // Esto evita problemas de referencias a objetos Layout no accesibles
-                    string source = webForm.Source;
+                    // Intentamos obtener el source casteando a ISource
+                    string source = null;
+                    if (webForm is ISource sourcePart)
+                    {
+                        source = sourcePart.Source;
+                    }
+
                     if (!string.IsNullOrEmpty(source))
                     {
-                        // Buscar patrón Class="NombreClase" dentro del tag <Prop> o atributos del Form
-                        // Patrón típico en XML de layout: Property Name="FormClass" Value="NombreClase"
-                        // O en HTML antiguo: class="NombreClase"
-                        
-                        // Intento A: XML Property moderno
-                        var match = Regex.Match(source, "Name=\"FormClass\"\s+Value=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        // Expresiones regulares con string verbatim (@) para evitar errores de escape
+                        var match = Regex.Match(source, @"Name=""FormClass""\s+Value=""([^""]+)""", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, "Name=\"Class\"\s+Value=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Name=""Class""\s+Value=""([^""]+)""", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        // Intento B: Atributo directo (HTML/XML legacy)
-                        match = Regex.Match(source, "FormClass=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"FormClass=""([^""]+)""", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                         match = Regex.Match(source, "Class=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Class=""([^""]+)""", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
                     }
                 }
@@ -120,12 +120,22 @@ namespace Acme.Packages.Menu.Core.Application.Services
         {
             try
             {
-                // Reflection seguro o uso de métodos dinámicos si están disponibles
-                if (obj is IPropertiesObject propsObj)
+                if (obj == null) return null;
+
+                // Si es un KBObject
+                if (obj is KBObject kbObj)
                 {
-                    object val = propsObj.GetPropertyValue(propName);
+                    object val = kbObj.GetPropertyValue(propName);
                     return val != null ? val.ToString() : null;
                 }
+
+                // Si es un KBObjectPart
+                if (obj is KBObjectPart kbPart)
+                {
+                    object val = kbPart.GetPropertyValue(propName);
+                    return val != null ? val.ToString() : null;
+                }
+
                 return null;
             }
             catch { return null; }
@@ -143,7 +153,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
                 foreach (var item in data)
                 {
-                    // Formato CSV seguro usando string.Format clásico
                     sb.AppendLine(string.Format("{0};{1};{2}", 
                         EscapeCsv(item.Name), 
                         EscapeCsv(item.Description), 
@@ -163,8 +172,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            // Lógica simple y compatible con C# 7.3
-            if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
+            if (field.Contains(";") || field.Contains(""") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
             }
