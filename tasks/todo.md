@@ -1,20 +1,12 @@
-# Plan de Trabajo - Listar Form Class de WebPanels (Fixes)
+# Plan de Trabajo - Listar Form Class de WebPanels (Fixes Finales)
 
 ## Objetivo
-Corregir la falta de descripción en el menú y el reporte en blanco (CSV vacío).
+Solucionar errores de compilación y mejorar la extracción de la propiedad "Form Class".
 
-## Tareas
+## Correcciones
+- [x] **Error CS1061 (WebFormPart.Layout):** Se eliminó la dependencia de `.Layout` y se reemplazó por un análisis directo del código fuente (`.Source`) usando expresiones regulares (Regex). Esto es más compatible y menos propenso a errores de versión del SDK.
+- [x] **Errores CS8370 (Strings):** Se eliminaron los literales de cadena modernos (`"""`) y se reemplazaron por strings estándar compatibles con C# 7.3 / .NET 4.7.
+- [x] **Lógica de Extracción:** Se implementó una búsqueda de patrones XML/HTML (`Name="FormClass" Value="..."`) para encontrar la propiedad incluso si no está expuesta directamente en el objeto de API.
 
-- [x] Corregir Recurso de Texto:
-    - [x] Mover `CmdListWebPanelFormClass_Name` de `ResourcesV1.resx` a `Resources.resx` (ya que `Menu.package` apunta a `Resources`).
-    - [x] Revertir cambio en `ResourcesV1.resx`.
-- [x] Robustecer `WebPanelService.cs`:
-    - [x] Usar comparación por nombre de tipo (`obj.TypeDescriptor.Name == "WebPanel"`) para evitar problemas de casting.
-    - [x] Mejorar la búsqueda de `WebFormPart` usando `Get("WebForm")` genérico.
-    - [x] Asegurar codificación UTF-8 con BOM explícito en la exportación.
-    - [x] Agregar logging detallado del progreso.
-- [x] Verificar compilación.
-
-## Detalles de Implementación
-- Se centralizaron los recursos en `Resources.resx`.
-- Se usa `UTF8Encoding(true)` para forzar el BOM, asegurando que Excel abra el CSV con los caracteres correctos.
+## Estado
+Listo para compilar y probar.

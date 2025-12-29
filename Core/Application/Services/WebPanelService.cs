@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Artech.Architecture.Common.Objects;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Genexus.Common.Objects;
@@ -28,137 +29,142 @@ namespace Acme.Packages.Menu.Core.Application.Services
                 var model = UIServices.KB.CurrentModel;
                 if (model == null)
                 {
-                    _logger.LogError("No active model found. Open a Knowledge Base first.");
+                    _logger.LogError("No active model found.");
                     return;
                 }
 
-                _logger.LogSuccess("Starting analysis of 'Form Class' property for all WebPanels...");
+                _logger.LogSuccess("Analyzing WebPanels for 'Form Class'...");
                 
                 var results = new List<WebPanelInfo>();
-                int count = 0;
                 int webPanelsFound = 0;
 
-                // Iterate using a more generic approach to ensure we catch all WebPanels
                 foreach (KBObject obj in model.Objects.GetAll())
                 {
-                    // Check by TypeDescriptor Name to be safer against assembly version mismatches
                     if (obj.TypeDescriptor.Name == "WebPanel")
                     {
                         webPanelsFound++;
                         string formClass = GetFormClassValue(obj);
                         
-                        // Always add to result, even if empty, to show we found the object
                         results.Add(new WebPanelInfo { Name = obj.Name, Description = obj.Description, FormClass = formClass });
                         
-                        // Log every 50 items to show progress without flooding
                         if (webPanelsFound % 50 == 0)
                              _logger.LogSuccess(string.Format("Processed {0} WebPanels...", webPanelsFound));
                     }
                 }
 
-                _logger.LogSuccess(string.Format("Finished processing. Total WebPanels found: {0}", webPanelsFound));
+                _logger.LogSuccess(string.Format("Finished. Total WebPanels: {0}", webPanelsFound));
 
                 if (results.Count > 0)
-                {
                     ExportToExcel(results);
-                }
                 else
-                {
-                    _logger.LogWarning("No WebPanels found in the current Knowledge Base.");
-                }
+                    _logger.LogWarning("No WebPanels found.");
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error listing WebPanel properties: " + ex.Message);
-                _logger.LogError(ex.StackTrace);
+                _logger.LogError("Error: " + ex.Message);
             }
         }
 
-        private string GetFormClassValue(KBObject webPanel)
+        private string GetFormClassValue(KBObject obj)
         {
             try 
             {
-                object propValue = null;
+                // 1. Intentar propiedades directas
+                string val = GetPropString(obj, "FormClass");
+                if (!string.IsNullOrEmpty(val)) return val;
 
-                // Attempt 1: Direct property on the Object
-                propValue = webPanel.GetPropertyValue("FormClass");
+                val = GetPropString(obj, "ThemeClass");
+                if (!string.IsNullOrEmpty(val)) return val;
 
-                // Attempt 2: "ThemeClass" property
-                if (propValue == null)
+                // 2. Buscar en WebFormPart
+                WebFormPart webForm = obj.Parts.Get<WebFormPart>();
+                if (webForm != null)
                 {
-                    propValue = webPanel.GetPropertyValue("ThemeClass");
-                }
+                    val = GetPropString(webForm, "FormClass");
+                    if (!string.IsNullOrEmpty(val)) return val;
 
-                // Attempt 3: Try to find the WebFormPart
-                if (propValue == null)
-                {
-                    // Search for the part using its Guid or Type if generic Get<T> fails
-                    KBObjectPart formPart = webPanel.Parts.Get("WebForm");
-                    
-                    if (formPart != null)
+                    val = GetPropString(webForm, "ThemeClass");
+                    if (!string.IsNullOrEmpty(val)) return val;
+
+                    // 3. Fallback: Analizar el XML del Layout directamente
+                    // Esto evita problemas de referencias a objetos Layout no accesibles
+                    string source = webForm.Source;
+                    if (!string.IsNullOrEmpty(source))
                     {
-                        propValue = formPart.GetPropertyValue("FormClass");
-                        if (propValue == null)
-                            propValue = formPart.GetPropertyValue("ThemeClass");
-                        if (propValue == null)
-                            propValue = formPart.GetPropertyValue("Class");
+                        // Buscar patrón Class="NombreClase" dentro del tag <Prop> o atributos del Form
+                        // Patrón típico en XML de layout: Property Name="FormClass" Value="NombreClase"
+                        // O en HTML antiguo: class="NombreClase"
+                        
+                        // Intento A: XML Property moderno
+                        var match = Regex.Match(source, "Name=\"FormClass\"\s+Value=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        if (match.Success) return match.Groups[1].Value;
+
+                        match = Regex.Match(source, "Name=\"Class\"\s+Value=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        if (match.Success) return match.Groups[1].Value;
+
+                        // Intento B: Atributo directo (HTML/XML legacy)
+                        match = Regex.Match(source, "FormClass=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        if (match.Success) return match.Groups[1].Value;
+
+                         match = Regex.Match(source, "Class=\"([^\"]+)\", RegexOptions.IgnoreCase);
+                        if (match.Success) return match.Groups[1].Value;
                     }
                 }
 
-                return propValue != null ? propValue.ToString() : "";
+                return "";
             }
-            catch
+            catch { return ""; }
+        }
+
+        private string GetPropString(object obj, string propName)
+        {
+            try
             {
-                return "ErrorReadingProperty";
+                // Reflection seguro o uso de métodos dinámicos si están disponibles
+                if (obj is IPropertiesObject propsObj)
+                {
+                    object val = propsObj.GetPropertyValue(propName);
+                    return val != null ? val.ToString() : null;
+                }
+                return null;
             }
+            catch { return null; }
         }
 
         private void ExportToExcel(List<WebPanelInfo> data)
         {
             try
             {
-                string tempFile = Path.Combine(Path.GetTempPath(), "WebPanels_FormClass_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
-                
-                using (StreamWriter sw = new StreamWriter(tempFile, false, Encoding.UTF8))
-                {
-                    // Add BOM manually if needed, though Encoding.UTF8 usually handles it if configured, 
-                    // but writing the bytes explicitly ensures Excel recognizes it.
-                    // StreamWriter with Encoding.UTF8 might imply BOM, but let's be explicit with the preamble if we weren't using the writer's constructor handling.
-                    // Actually, let's just use the constructor that includes BOM:
-                    // new UTF8Encoding(true) -> true enables BOM
-                    
-                }
-                
-                // Let's stick to WriteAllText with specific encoding which is cleaner
+                string tempFile = Path.Combine(Path.GetTempPath(), "WebPanels_Report_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
                 var sb = new StringBuilder();
+                
+                // Header
                 sb.AppendLine("WebPanel Name;Description;Form Class");
 
                 foreach (var item in data)
                 {
+                    // Formato CSV seguro usando string.Format clásico
                     sb.AppendLine(string.Format("{0};{1};{2}", 
                         EscapeCsv(item.Name), 
                         EscapeCsv(item.Description), 
                         EscapeCsv(item.FormClass)));
                 }
 
-                // UTF8 with BOM
                 File.WriteAllText(tempFile, sb.ToString(), new UTF8Encoding(true));
-                
-                _logger.LogSuccess("Export created successfully at: " + tempFile);
-                _logger.LogSuccess("Opening file...");
-
+                _logger.LogSuccess("Excel/CSV created: " + tempFile);
                 Process.Start(tempFile);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error exporting to Excel/CSV: " + ex.Message);
+                _logger.LogError("Export Error: " + ex.Message);
             }
         }
 
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            if (field.Contains(";") || field.Contains("\"") || field.Contains("\n") || field.Contains("\r"))
+            // Lógica simple y compatible con C# 7.3
+            if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
             }
