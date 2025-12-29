@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Reflection;
+using System.Xml;
 using Artech.Architecture.Common.Objects;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Genexus.Common.Objects;
@@ -28,120 +30,46 @@ namespace Acme.Packages.Menu.Core.Application.Services
             try
             {
                 var model = UIServices.KB.CurrentModel;
-                if (model == null)
-                {
-                    _logger.LogError("No active model found.");
-                    return;
-                }
+                if (model == null) { _logger.LogError("No active model."); return; }
 
                 _logger.LogSuccess("Analyzing WebPanels for 'Form Class'...");
                 
                 var results = new List<WebPanelInfo>();
-                int webPanelsFound = 0;
+                int count = 0;
+                bool debugDone = false;
 
                 foreach (KBObject obj in model.Objects.GetAll())
                 {
                     if (obj.TypeDescriptor.Name == "WebPanel")
                     {
-                        webPanelsFound++;
-                        
-                        // --- DEBUG DIAGNOSTIC START ---
-                        if (webPanelsFound == 1)
-                        {
-                            LogDeepDebugInfo(obj);
-                        }
-                        // --- DEBUG DIAGNOSTIC END ---
-
+                        count++;
                         string formClass = GetFormClassValue(obj);
                         
+                        if (string.IsNullOrEmpty(formClass) && !debugDone)
+                        {
+                            formClass = GetFormClassViaFullXml(obj);
+                            debugDone = true;
+                        }
+                        
+                        if (string.IsNullOrEmpty(formClass))
+                        {
+                             formClass = GetFormClassViaFullXml(obj);
+                        }
+
                         results.Add(new WebPanelInfo { Name = obj.Name, Description = obj.Description, FormClass = formClass });
                         
-                        if (webPanelsFound % 50 == 0)
-                             _logger.LogSuccess(string.Format("Processed {0} WebPanels...", webPanelsFound));
+                        if (count % 50 == 0) _logger.LogSuccess(string.Format("Processed {0}...", count));
                     }
                 }
-
-                _logger.LogSuccess(string.Format("Finished. Total WebPanels: {0}", webPanelsFound));
+                
+                _logger.LogSuccess(string.Format("Finished. Total: {0}", count));
 
                 if (results.Count > 0)
                     ExportToExcel(results);
                 else
                     _logger.LogWarning("No WebPanels found.");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError("Error: " + ex.Message);
-            }
-        }
-
-        private void LogDeepDebugInfo(KBObject obj)
-        {
-            try
-            {
-                _logger.LogSuccess("**************************************************");
-                _logger.LogSuccess(string.Format("DIAGNOSTIC REPORT FOR: {0}", obj.Name));
-                _logger.LogSuccess("**************************************************");
-
-                _logger.LogSuccess("--- OBJECT PROPERTIES ---");
-                foreach (Property prop in obj.Properties)
-                {
-                    if (prop.Name.ToLower().Contains("class"))
-                        _logger.LogSuccess(string.Format("PROP: {0} = {1}", prop.Name, prop.Value));
-                }
-
-                WebFormPart webForm = obj.Parts.Get<WebFormPart>();
-                if (webForm != null)
-                {
-                    _logger.LogSuccess("--- WEBFORM PART PROPERTIES ---");
-                    foreach (Property prop in webForm.Properties)
-                    {
-                        if (prop.Name.ToLower().Contains("class"))
-                            _logger.LogSuccess(string.Format("PART PROP: {0} = {1}", prop.Name, prop.Value));
-                    }
-
-                    if (webForm is ISource sourcePart)
-                    {
-                        string src = sourcePart.Source;
-                        if (!string.IsNullOrEmpty(src))
-                        {
-                            _logger.LogSuccess("--- SOURCE PREVIEW (First 500 chars) ---");
-                            _logger.LogSuccess(src.Substring(0, Math.Min(src.Length, 500)));
-                            
-                            _logger.LogSuccess("--- REGEX TEST ---");
-                            
-                            // ESCAPING BACKSLASHES FOR C# COMPILER (\s)
-                            var regexes = new string[] { 
-                                "Name=\"FormClass\"\\s+Value=\"([^\"]+)\"",
-                                "Name=\"Class\"\\s+Value=\"([^\"]+)\"",
-                                "FormClass=\"([^\"]+)\"",
-                                "Class=\"([^\"]+)\""
-                            };
-
-                            foreach(var pat in regexes)
-                            {
-                                var m = Regex.Match(src, pat, RegexOptions.IgnoreCase);
-                                if (m.Success)
-                                    _logger.LogSuccess(string.Format("MATCH FOUND for '{0}': {1}", pat, m.Groups[1].Value));
-                                else
-                                    _logger.LogWarning(string.Format("NO MATCH for '{0}'", pat));
-                            }
-                        }
-                        else
-                        {
-                             _logger.LogWarning("WebForm Source is empty.");
-                        }
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning("WebFormPart NOT FOUND on this object.");
-                }
-                _logger.LogSuccess("**************************************************");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Error in Diagnostic: " + ex.Message);
-            }
+            catch (Exception ex) { _logger.LogError("Error: " + ex.Message); }
         }
 
         private string GetFormClassValue(KBObject obj)
@@ -150,7 +78,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
             {
                 string val = GetPropString(obj, "FormClass");
                 if (!string.IsNullOrEmpty(val)) return val;
-
+                
                 val = GetPropString(obj, "ThemeClass");
                 if (!string.IsNullOrEmpty(val)) return val;
 
@@ -159,33 +87,51 @@ namespace Acme.Packages.Menu.Core.Application.Services
                 {
                     val = GetPropString(webForm, "FormClass");
                     if (!string.IsNullOrEmpty(val)) return val;
+                }
+                
+                return "";
+            }
+            catch { return ""; }
+        }
 
-                    val = GetPropString(webForm, "ThemeClass");
-                    if (!string.IsNullOrEmpty(val)) return val;
-
-                    string source = null;
-                    if (webForm is ISource sourcePart)
+        private string GetFormClassViaFullXml(KBObject obj)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                using (StringWriter sw = new StringWriter(sb))
+                using (XmlTextWriter writer = new XmlTextWriter(sw))
+                {
+                    MethodInfo serializeMethod = obj.GetType().GetMethod("Serialize", new Type[] { typeof(XmlWriter) });
+                    if (serializeMethod != null)
                     {
-                        source = sourcePart.Source;
+                        serializeMethod.Invoke(obj, new object[] { writer });
                     }
-
-                    if (!string.IsNullOrEmpty(source))
+                    else
                     {
-                        // ESCAPING BACKSLASHES FOR C# COMPILER (\s)
-                        var match = Regex.Match(source, "Name=\"FormClass\"\\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                        if (match.Success) return match.Groups[1].Value;
-
-                        match = Regex.Match(source, "Name=\"Class\"\\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                        if (match.Success) return match.Groups[1].Value;
-
-                        match = Regex.Match(source, "FormClass=\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                        if (match.Success) return match.Groups[1].Value;
-
-                        match = Regex.Match(source, "Class=\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                        if (match.Success) return match.Groups[1].Value;
+                        return ""; 
                     }
                 }
+                
+                string xmlContent = sb.ToString();
+                if (string.IsNullOrEmpty(xmlContent)) return "";
 
+                // Using character class instead of backslash-s to avoid compiler escape issues
+                var regexes = new string[] { 
+                    "Name=\"FormClass\"[ \t\r\n]+Value=\"([^\"]+)\"",
+                    "Name=\"Class\"[ \t\r\n]+Value=\"([^\"]+)\"",
+                    "FormClass=\"([^\"]+)\"",
+                    "Class=\"([^\"]+)\"",
+                    "<Name>FormClass</Name>[ \t\r\n]*<Value>([^<]+)</Value>",
+                    "<Name>Class</Name>[ \t\r\n]*<Value>([^<]+)</Value>"
+                };
+
+                foreach(var pat in regexes)
+                {
+                    var m = Regex.Match(xmlContent, pat, RegexOptions.IgnoreCase);
+                    if (m.Success) return m.Groups[1].Value;
+                }
+                
                 return "";
             }
             catch { return ""; }
@@ -196,19 +142,16 @@ namespace Acme.Packages.Menu.Core.Application.Services
             try
             {
                 if (obj == null) return null;
-
                 if (obj is KBObject kbObj)
                 {
                     object val = kbObj.GetPropertyValue(propName);
                     return val != null ? val.ToString() : null;
                 }
-
                 if (obj is KBObjectPart kbPart)
                 {
                     object val = kbPart.GetPropertyValue(propName);
                     return val != null ? val.ToString() : null;
                 }
-
                 return null;
             }
             catch { return null; }
@@ -220,7 +163,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
             {
                 string tempFile = Path.Combine(Path.GetTempPath(), "WebPanels_Report_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
                 var sb = new StringBuilder();
-                
+                sb.Append(new char[] { '\uFEFF' });
                 sb.AppendLine("WebPanel Name;Description;Form Class");
 
                 foreach (var item in data)
@@ -231,7 +174,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
                         EscapeCsv(item.FormClass)));
                 }
 
-                File.WriteAllText(tempFile, sb.ToString(), new UTF8Encoding(true));
+                File.WriteAllText(tempFile, sb.ToString(), Encoding.UTF8);
                 _logger.LogSuccess("Excel/CSV created: " + tempFile);
                 Process.Start(tempFile);
             }
@@ -251,11 +194,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
             return field;
         }
 
-        private class WebPanelInfo
-        {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public string FormClass { get; set; }
-        }
+        private class WebPanelInfo { public string Name { get; set; } public string Description { get; set; } public string FormClass { get; set; } }
     }
 }
