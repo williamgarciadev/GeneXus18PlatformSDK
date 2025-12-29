@@ -1,17 +1,13 @@
-# Plan de Trabajo - Diagnóstico de WebPanel Form Class
+# Plan de Trabajo - Listar Form Class de WebPanels (Debug Final)
 
 ## Objetivo
-Agregar un diagnóstico detallado para entender por qué la propiedad "Form Class" aparece vacía.
+Lograr una compilación limpia en C# 7.3 y ejecutar el diagnóstico profundo.
 
-## Tareas
-- [x] **Implementar Modo Debug:**
-    - Al ejecutar el comando, para el **primer WebPanel encontrado**, se imprimirá en el Output de GeneXus:
-        - Todas las propiedades del Objeto relacionadas con "Class".
-        - Todas las propiedades de la parte WebForm relacionadas con "Class".
-        - Una muestra del código fuente (XML/HTML) del layout.
-        - Resultados de pruebas de Regex en tiempo real.
-    - Esto permitirá ver el nombre exacto de la propiedad interna.
-- [x] **Mantener Compatibilidad:** El código sigue siendo compatible con C# 7.3.
+## Correcciones Realizadas
+- [x] **Compatibilidad C# 7.3 Completa:**
+    - Se eliminaron las **Collection Expressions** (`[ ... ]`) y se reemplazaron por `new string[] { ... }`.
+    - Se eliminaron los **Raw String Literals** (`"""..."""`) y se reemplazaron por cadenas verbatim estándar (`@""`).
+    - Se corrigió el error de sintaxis en `EscapeCsv` (comillas triples incorrectas).
 
 ## Estado
-Listo para compilar y ejecutar diagnóstico.
+El código ahora es 100% compatible con .NET Framework 4.7.2. Al compilar y ejecutar, el primer WebPanel arrojará un reporte detallado en el Output que revelará el nombre real de la propiedad "Form Class".

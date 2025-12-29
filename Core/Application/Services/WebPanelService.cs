@@ -46,7 +46,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
                         webPanelsFound++;
                         
                         // --- DEBUG DIAGNOSTIC START ---
-                        // For the first WebPanel found, dump ALL info to the output window
                         if (webPanelsFound == 1)
                         {
                             LogDeepDebugInfo(obj);
@@ -86,7 +85,6 @@ namespace Acme.Packages.Menu.Core.Application.Services
                 _logger.LogSuccess("--- OBJECT PROPERTIES ---");
                 foreach (Property prop in obj.Properties)
                 {
-                    // Filter for 'class' related properties to keep log readable
                     if (prop.Name.ToLower().Contains("class"))
                         _logger.LogSuccess(string.Format("PROP: {0} = {1}", prop.Name, prop.Value));
                 }
@@ -110,11 +108,12 @@ namespace Acme.Packages.Menu.Core.Application.Services
                             _logger.LogSuccess(src.Substring(0, Math.Min(src.Length, 500)));
                             
                             _logger.LogSuccess("--- REGEX TEST ---");
+                            // Corregido: Array explícito compatible con C# 7.3
                             var regexes = new string[] { 
-                                @"Name=\"FormClass\"\s+Value=\"([^\"]+)\"",
-                                @"Name=\"Class\"\s+Value=\"([^\"]+)\"",
-                                @"FormClass=\"([^\"]+)\"",
-                                @"Class=\"([^\"]+)\""
+                                @"Name=""FormClass""\s+Value=""([^""]+)"",
+                                @"Name=""Class""\s+Value=""([^""]+)"",
+                                @"FormClass=""([^""]+)"",
+                                @"Class=""([^""]+)""
                             };
 
                             foreach(var pat in regexes)
@@ -171,16 +170,17 @@ namespace Acme.Packages.Menu.Core.Application.Services
 
                     if (!string.IsNullOrEmpty(source))
                     {
-                        var match = Regex.Match(source, @"Name=\"FormClass\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        // Corregido: Strings verbatim estándar
+                        var match = Regex.Match(source, @"Name=""FormClass""\s+Value=""([^""]+)"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Name=\"Class\"\s+Value=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Name=""Class""\s+Value=""([^""]+)"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"FormClass=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"FormClass=""([^""]+)"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
 
-                        match = Regex.Match(source, @"Class=\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                        match = Regex.Match(source, @"Class=""([^""]+)"", RegexOptions.IgnoreCase);
                         if (match.Success) return match.Groups[1].Value;
                     }
                 }
@@ -243,7 +243,8 @@ namespace Acme.Packages.Menu.Core.Application.Services
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            if (field.Contains(";") || field.Contains(""") || field.Contains("\r") || field.Contains("\n"))
+            // Corregido: Escape de comillas compatible
+            if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
             }
