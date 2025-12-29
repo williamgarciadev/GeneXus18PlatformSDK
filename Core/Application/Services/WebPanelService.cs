@@ -172,7 +172,7 @@ namespace Acme.Packages.Menu.Core.Application.Services
         private string EscapeCsv(string field)
         {
             if (string.IsNullOrEmpty(field)) return "";
-            if (field.Contains(";") || field.Contains(""") || field.Contains("\r") || field.Contains("\n"))
+            if (field.Contains(";") || field.Contains("\"") || field.Contains("\r") || field.Contains("\n"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
             }
