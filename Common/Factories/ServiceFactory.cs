@@ -3,6 +3,7 @@ using Acme.Packages.Menu.Core.Domain.Interfaces;
 using Acme.Packages.Menu.Core.Infrastructure.GeneXus;
 using Acme.Packages.Menu.Core.Infrastructure.Logging;
 using Acme.Packages.Menu.Core.Infrastructure.Formatters;
+using Acme.Packages.Menu.Services;
 
 namespace Acme.Packages.Menu.Common.Factories
 {
@@ -19,6 +20,7 @@ namespace Acme.Packages.Menu.Common.Factories
         private static IVariableTracerService _variableTracerService;
         private static ISubroutineNavigatorService _subroutineNavigatorService;
         private static IUnreferencedObjectsService _unreferencedObjectsService;
+        private static EditorTextExtractor _editorTextExtractor;
 
         public static ILogger GetLogger()
         {
@@ -76,6 +78,16 @@ namespace Acme.Packages.Menu.Common.Factories
         public static IUnreferencedObjectsService GetUnreferencedObjectsService()
         {
             return _unreferencedObjectsService ?? (_unreferencedObjectsService = new UnreferencedObjectsService());
+        }
+
+        public static WebPanelService GetWebPanelService()
+        {
+            return new WebPanelService(GetLogger());
+        }
+
+        public static EditorTextExtractor GetEditorTextExtractor()
+        {
+            return _editorTextExtractor ?? (_editorTextExtractor = new EditorTextExtractor());
         }
     }
 }

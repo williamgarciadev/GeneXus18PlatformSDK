@@ -159,4 +159,13 @@
   <data name="CmdGoToSubroutine_Name" xml:space="preserve">
     <value>Ir a Subrutina</value>
   </data>
+  <data name="CmdBackFromGoTo_Name" xml:space="preserve">
+    <value>Volver de Ir A</value>
+  </data>
+  <data name="CmdInventoryExternalObjects_Name" xml:space="preserve">
+    <value>Inventario External Objects</value>
+  </data>
+  <data name="CmdListWebPanelFormClass_Name" xml:space="preserve">
+    <value>Listar WebPanel Form Class</value>
+  </data>
 </root>

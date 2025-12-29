@@ -1,10 +1,13 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
 using Artech.Architecture.UI.Framework.Services;
 using Artech.Common.Framework.Commands;
 using Acme.Packages.Menu.Services.Export;
 using Acme.Packages.Menu.Services.Variables;
+using Acme.Packages.Menu.Core.Application.Services;
 using Acme.Packages.Menu.Utilities;
 using Artech.Architecture.UI.Framework.Helper;
 using Acme.Packages.Menu.Common.Factories;
@@ -15,6 +18,7 @@ using Artech.Architecture.UI.Framework.Objects;
 using Artech.Common.Framework.Selection;
 using Artech.Genexus.Common.Parts;
 using System.Windows.Forms;
+using Artech.Architecture.UI.Framework.Editors;
 
 namespace Acme.Packages.Menu
 {
@@ -40,7 +44,136 @@ namespace Acme.Packages.Menu
             AddCommand(CommandKeys.CmdSmartFixVariables, new ExecHandler(ExecSmartFixVariables), new QueryHandler(QueryGenerateLogDebugFormCommand));
             AddCommand(CommandKeys.CmdTraceVariable, new ExecHandler(ExecTraceVariable), new QueryHandler(QueryAlwaysEnabled));
             AddCommand(CommandKeys.CmdGoToSubroutine, new ExecHandler(ExecGoToSubroutine), new QueryHandler(QueryAlwaysEnabled));
+            AddCommand(CommandKeys.CmdBackFromGoTo, new ExecHandler(ExecBackFromGoTo), new QueryHandler(QueryAlwaysEnabled));
             AddCommand(CommandKeys.CmdFindUnreferencedObjects, new ExecHandler(ExecFindUnreferencedObjects), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.CmdInventoryExternalObjects, new ExecHandler(ExecInventoryExternalObjects), new QueryHandler(QueryGenerateLogDebugFormCommand));
+            AddCommand(CommandKeys.CmdListWebPanelFormClass, new ExecHandler(ExecListWebPanelFormClass), new QueryHandler(QueryGenerateLogDebugFormCommand));
+        }
+
+        private bool ExecListWebPanelFormClass(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                var service = ServiceFactory.GetWebPanelService();
+                service.ListFormClassProperty();
+            }, "listar form class webpanels");
+        }
+
+        private bool ExecInventoryExternalObjects(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                var service = new InventoryService();
+                string csvContent = service.GetExternalObjectsCsv();
+
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                saveFileDialog.FilterIndex = 1;
+                saveFileDialog.RestoreDirectory = true;
+                saveFileDialog.FileName = $"ExternalObjects_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(saveFileDialog.FileName, csvContent);
+                    Utils.ShowInfo("Inventario generado exitosamente.", "Inventario");
+                }
+            }, "inventario external objects");
+        }
+
+        private void SaveCurrentNavigationState(CommandData commandData)
+        {
+            try
+            {
+                // Método HÍBRIDO para obtener el objeto y la parte actual
+                KBObject obj = GetObjectFromContext(commandData);
+                KBObjectPart part = null;
+                try { part = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart; } catch { }
+                
+                if (obj == null && part != null) obj = part.KBObject;
+                if (obj == null) return;
+
+                var textExtractor = ServiceFactory.GetEditorTextExtractor();
+                var pos = textExtractor.GetCursorPosition(commandData);
+                int line = pos?.Line ?? 1;
+
+                string partName = part?.Name ?? "";
+                if (string.IsNullOrEmpty(partName) && part != null) partName = part.TypeDescriptor?.Name ?? "";
+
+                Utils.Log($"📍 Historial: Guardando {obj.Name} ({partName}) Ln: {line}");
+                Utils.PushNavigation(obj, partName, line);
+            }
+            catch (Exception ex) { Utils.Log("⚠️ Error guardando historial: " + ex.Message); }
+        }
+
+        private bool ExecBackFromGoTo(CommandData commandData)
+        {
+            return ExecuteWithErrorHandling(() =>
+            {
+                // 1. DETECCIÓN CONTEXTUAL: ¿Estamos sobre una definición de subrutina?
+                var textExtractor = ServiceFactory.GetEditorTextExtractor();
+                string currentLineText = textExtractor.GetCurrentLine(commandData);
+                
+                if (!string.IsNullOrEmpty(currentLineText) && currentLineText.Trim().ToLower().StartsWith("sub "))
+                {
+                    string subName = ServiceFactory.GetSubroutineNavigatorService().CleanSubroutineName(currentLineText);
+                    if (!string.IsNullOrEmpty(subName))
+                    {
+                        Utils.Log($"🔍 Buscando llamador 'Do' para la subrutina actual: '{subName}'...");
+                        KBObject currentObject = GetObjectFromContext(commandData);
+                        if (currentObject != null)
+                        {
+                            foreach (KBObjectPart part in currentObject.Parts)
+                            {
+                                string source = GetPartSource(part);
+                                int callerLine = ServiceFactory.GetSubroutineNavigatorService().FindCallerLine(source, subName);
+                                if (callerLine > 0)
+                                {
+                                    Utils.Log($"🔙 Volviendo al llamador (Do) en {part.Name} Ln: {callerLine}");
+                                    JumpToLine(currentObject, new VariableOccurrenceDto { LineNumber = callerLine, PartName = part.Name });
+                                    return;
+                                }
+                            }
+                        }
+                        Utils.ShowWarning($"No se encontró ninguna llamada (Do) para la subrutina '{subName}' en este objeto.", "Volver");
+                        return; // IMPORTANTE: Si estamos en un Sub, NO usamos la pila si falla la búsqueda.
+                    }
+                }
+
+                // 2. Si NO estamos en un Sub, intentar historial de navegación (Pila)
+                var prev = Utils.PopNavigation();
+                if (prev != null)
+                {
+                    Utils.Log($"🔙 Volviendo a historial: {prev.Item1.Name} ({prev.Item2}) Ln: {prev.Item3}");
+                    Utils.NavigateToLine(prev.Item1, prev.Item2, prev.Item3);
+                    return;
+                }
+
+                // 3. Fallback final: Comandos nativos
+                Utils.Log("ℹ️ Sin contexto ni historial guardado, intentando comandos nativos...");
+                if (Utils.TryInvokeBack()) return;
+
+                Type baseKeysType = typeof(Artech.Architecture.UI.Framework.Commands.CommandKeys);
+                foreach (Type container in baseKeysType.GetNestedTypes())
+                {
+                    if (container.Name.Equals("Wiki", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    string[] backCandidates = { "NavigateBackward", "NavigateBack", "Backward" };
+                    foreach (string name in backCandidates)
+                    {
+                        PropertyInfo prop = container.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
+                        if (prop != null)
+                        {
+                            object val = prop.GetValue(null);
+                            if (val is CommandKey key)
+                            {
+                                UIServices.CommandDispatcher.Dispatch(key);
+                                Utils.Log($"✅ Volver atrás completado vía {container.Name}.{name}");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }, "volver atrás");
         }
 
         private bool ExecFindUnreferencedObjects(CommandData commandData)
@@ -163,119 +296,86 @@ namespace Acme.Packages.Menu
 
         private void JumpToLine(KBObject obj, VariableOccurrenceDto trace)
         {
-            if (obj == null || trace == null) return;
+            Utils.Log($"🔍 [JumpToLine] Iniciando navegación a línea {trace?.LineNumber} en parte '{trace?.PartName}'");
 
-            // 1. Abrir y asegurar que el documento está en pantalla
-            try
+            if (obj == null || trace == null)
             {
-                if (UIServices.DocumentManager != null)
-                {
-                    UIServices.DocumentManager.OpenDocument(obj, new OpenDocumentOptions());
-                }
+                Utils.Log("❌ [JumpToLine] obj o trace es null");
+                return;
             }
-            catch (Exception ex) { Utils.Log("⚠ Error abriendo documento: " + ex.Message); }
-            
-            // Pequeña pausa para que el IDE procese la apertura de la pestaña
-            System.Threading.Thread.Sleep(50);
-            Application.DoEvents();
 
-            // 2. Intentar salto vía Documento Activo (Método más estable en GX18)
-            try 
+            // Usar la nueva utilidad robusta de navegación (cubre ActiveView y Reflection)
+            if (Utils.NavigateToLine(obj, trace.PartName, trace.LineNumber))
             {
-                if (UIServices.Environment != null && UIServices.Environment.ActiveDocument != null && UIServices.Environment.ActiveDocument.Object == obj)
-                {
-                    var activeDoc = UIServices.Environment.ActiveDocument;
-                    // Buscamos el método Select en el documento
-                    var selectMethod = activeDoc.GetType().GetMethod("Select", new Type[] { typeof(int), typeof(int), typeof(int) });
-                    if (selectMethod != null)
-                    {
-                        // Linea, Caracter, Largo
-                        selectMethod.Invoke(activeDoc, new object[] { trace.LineNumber, 1, 0 });
-                        Utils.Log("🚀 Salto ejecutado vía ActiveDocument.Select");
-                        return;
-                    }
-                }
-            } catch (Exception ex) { Utils.Log("⚠ Error en salto ActiveDocument: " + ex.Message); }
-
-            // 3. Si falla, intentar vía Editor de la Parte
-            try
-            {
-                foreach (KBObjectPart part in obj.Parts)
-                {
-                    if (part == null) continue;
-                    
-                    string partName = part.Name ?? "";
-                    string targetName = trace.PartName ?? "";
-
-                    bool nameMatch = partName.Equals(targetName, StringComparison.OrdinalIgnoreCase);
-                    bool typeMatch = false;
-                    
-                    if (!nameMatch && part.TypeDescriptor != null && part.TypeDescriptor.Name != null)
-                    {
-                        typeMatch = part.TypeDescriptor.Name.Equals(targetName, StringComparison.OrdinalIgnoreCase);
-                    }
-
-                    if (nameMatch || typeMatch)
-                    {
-                        if (UIServices.EditorManager != null)
-                        {
-                            object editorObj = UIServices.EditorManager.GetEditor(part.Guid);
-                            if (editorObj != null)
-                            {
-                                Type eType = editorObj.GetType();
-                                
-                                // Probamos todas las combinaciones de salto conocidas
-                                var mGoTo = eType.GetMethod("GoTo", new Type[] { typeof(Artech.Common.Location.IPosition) }) ??
-                                            eType.GetMethod("SetPosition", new Type[] { typeof(int), typeof(int), typeof(int) }) ??
-                                            eType.GetMethod("Select", new Type[] { typeof(int), typeof(int) });
-
-                                if (mGoTo != null)
-                                {
-                                    if (mGoTo.GetParameters().Length == 1) // GoTo(IPosition)
-                                    {
-                                        Type tPosType = typeof(Artech.Common.Location.IPosition).Assembly.GetType("Artech.Common.Location.TextPosition");
-                                        object tPos = Activator.CreateInstance(tPosType, new object[] { trace.LineNumber, 1 });
-                                        mGoTo.Invoke(editorObj, new object[] { tPos });
-                                    }
-                                    else if (mGoTo.GetParameters().Length == 3) // SetPosition(l, c, len)
-                                        mGoTo.Invoke(editorObj, new object[] { trace.LineNumber, 1, 0 });
-                                    else // Select(l, c)
-                                        mGoTo.Invoke(editorObj, new object[] { trace.LineNumber, 1 });
-
-                                    // FORZAR SCROLL
-                                    eType.GetMethod("ScrollToCaret")?.Invoke(editorObj, null);
-                                    eType.GetMethod("Focus")?.Invoke(editorObj, null);
-                                    Application.DoEvents();
-                                }
-                            }
-                        }
-                        break;
-                    }
-                }
+                Utils.Log("✅ Navegación completada exitosamente vía Utils.");
+                return;
             }
-            catch (Exception ex) { Utils.Log("❌ Error en salto por Editor: " + ex.ToString()); }
+
+            Utils.Log("❌ Todas las estrategias de navegación fallaron.");
+            Utils.ShowWarning("Se encontró la definición pero no se pudo mover el cursor automáticamente.\nLínea: " + trace.LineNumber, "Navegación");
         }
 
         private bool ExecGoToSubroutine(CommandData commandData)
         {
             return ExecuteWithErrorHandling(() =>
             {
-                // Prioridad absoluta a la selección real del editor (Estilo Descartes)
-                string selection = Utils.GetSelectedTextSafe(commandData);
-                
-                // Si no hay selección, intentar obtener la línea bajo el cursor
-                if (string.IsNullOrEmpty(selection)) selection = GetCurrentLineContext();
+                Utils.Log("🚀 Comando 'Go To Subroutine' iniciado");
 
-                // Si aún no hay selección, intentar obtenerla vía Clipboard (Copy)
-                if (string.IsNullOrEmpty(selection)) selection = Utils.GetTextViaClipboard();
-                
-                if (string.IsNullOrEmpty(selection)) 
+                if (Utils.TryInvokeGoToImplementation())
                 {
-                    Utils.ShowError("No se detectó ninguna selección ni subrutina bajo el cursor."); 
-                    return; 
+                    Utils.Log("✅ Navegacion nativa completada.");
+                    return;
+                }
+
+                // Estrategia de detección mejorada (estilo IDE moderno con SOLID):
+                var textExtractor = ServiceFactory.GetEditorTextExtractor();
+
+                // 1. Selección explícita del usuario (máxima prioridad)
+                string selection = Utils.GetSelectedTextSafe(commandData);
+                if (!string.IsNullOrEmpty(selection))
+                {
+                    Utils.Log($"✅ Método 1: Selección explícita - '{selection}'");
+                }
+
+                // 2. Palabra bajo el cursor (nueva funcionalidad tipo F12 - método LSI)
+                if (string.IsNullOrEmpty(selection))
+                {
+                    selection = textExtractor.GetWordUnderCursor(commandData);
+                    if (!string.IsNullOrEmpty(selection))
+                    {
+                        Utils.Log($"✅ Método 2: Palabra bajo cursor (LSI) - '{selection}'");
+                    }
+                }
+
+                // 3. Fallback: toda la línea (para compatibilidad con código anterior)
+                if (string.IsNullOrEmpty(selection))
+                {
+                    selection = textExtractor.GetCurrentLine(commandData);
+                    if (!string.IsNullOrEmpty(selection))
+                    {
+                        Utils.Log($"✅ Método 3: Línea completa - '{selection}'");
+                    }
+                }
+
+                // 4. Último recurso: intentar vía clipboard
+                if (string.IsNullOrEmpty(selection))
+                {
+                    selection = Utils.GetTextViaClipboard();
+                    if (!string.IsNullOrEmpty(selection))
+                    {
+                        Utils.Log($"✅ Método 4: Clipboard - '{selection}'");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(selection))
+                {
+                    Utils.Log("❌ Ningún método pudo detectar texto");
+                    Utils.ShowError("No se detectó ninguna selección ni subrutina bajo el cursor.\n\nPor favor revisa el Output para detalles de debugging.");
+                    return;
                 }
 
                 string subName = ServiceFactory.GetSubroutineNavigatorService().CleanSubroutineName(selection);
+                Utils.Log($"🔍 Nombre de subrutina limpio: '{subName}'");
 
                 // Intentar obtener la parte actual (LSI)
                 KBObjectPart currentPart = null;
@@ -290,28 +390,43 @@ namespace Acme.Packages.Menu
 
                 if (currentObject == null) { Utils.ShowError("No se pudo identificar el objeto activo."); return; }
 
+                Utils.Log($"✅ Objeto identificado: {currentObject.Name}");
+                Utils.Log($"🔍 Buscando definición de 'Sub {subName}'...");
+
                 // Si tenemos la parte específica, buscamos ahí primero
                 int line = -1;
                 string targetPartName = "";
 
                 if (currentPart != null)
                 {
+                    Utils.Log($"🔍 Buscando en parte actual: {currentPart.Name}");
                     string source = GetPartSource(currentPart);
                     if (!string.IsNullOrEmpty(source))
                     {
+                        Utils.Log($"✅ Source obtenido: {source.Length} caracteres");
                         line = ServiceFactory.GetSubroutineNavigatorService().FindDefinitionLine(source, subName);
-                        targetPartName = currentPart.Name;
+                        if (line > 0)
+                        {
+                            targetPartName = currentPart.Name;
+                            Utils.Log($"✅ Definición encontrada en línea {line} de {targetPartName}");
+                        }
+                        else
+                        {
+                            Utils.Log($"⚠️ No se encontró en parte actual");
+                        }
                     }
                 }
 
                 // Si no encontramos en la parte actual (o no la tenemos), buscamos en todas las partes del objeto
                 if (line <= 0)
                 {
+                    Utils.Log($"🔍 Buscando en todas las partes del objeto ({currentObject.Parts.Count} partes)");
                     foreach (KBObjectPart part in currentObject.Parts)
                     {
                         // Evitar buscar de nuevo en la misma parte si ya buscamos
                         if (currentPart != null && part.Guid == currentPart.Guid) continue;
 
+                        Utils.Log($"  🔍 Buscando en: {part.Name}");
                         string source = GetPartSource(part);
                         if (!string.IsNullOrEmpty(source))
                         {
@@ -319,18 +434,26 @@ namespace Acme.Packages.Menu
                             if (line > 0)
                             {
                                 targetPartName = part.Name;
+                                Utils.Log($"✅ Definición encontrada en línea {line} de {targetPartName}");
                                 break;
                             }
                         }
                     }
                 }
 
-                if (line > 0) 
+                if (line > 0)
                 {
+                    Utils.Log($"🚀 Ejecutando salto a línea {line} en {targetPartName}");
+                    
+                    // GUARDAR POSICIÓN ACTUAL ANTES DE SALTAR
+                    SaveCurrentNavigationState(commandData);
+
                     JumpToLine(currentObject, new VariableOccurrenceDto { LineNumber = line, PartName = targetPartName });
+                    Utils.Log($"✅ Navegación completada");
                 }
-                else 
+                else
                 {
+                    Utils.Log($"❌ No se encontró la definición de 'Sub {subName}' en ninguna parte");
                     Utils.ShowWarning("No se encontró la definición de 'Sub " + subName + "' en el objeto " + currentObject.Name + ".", "Navegación");
                 }
             }, "ir a definición de subrutina");
@@ -347,51 +470,8 @@ namespace Acme.Packages.Menu
             catch { return null; }
         }
 
-        private string GetCurrentLineContext()
-        {
-            try
-            {
-                KBObjectPart currentPart = LSI.Packages.Extensiones.Utilidades.Entorno.CurrentEditingPart;
-                if (currentPart == null) return null;
-
-                object editorObj = UIServices.EditorManager.GetEditor(currentPart.Guid);
-                if (editorObj == null) return null;
-
-                // 1. Obtener el número de línea actual (Nivel SDK)
-                int lineNumber = -1;
-                var propPos = editorObj.GetType().GetProperty("CurrentPosition");
-                if (propPos != null)
-                {
-                    object posObj = propPos.GetValue(editorObj);
-                    if (posObj != null)
-                    {
-                        var propLine = posObj.GetType().GetProperty("Line");
-                        if (propLine != null) lineNumber = Convert.ToInt32(propLine.GetValue(posObj));
-                    }
-                }
-
-                if (lineNumber <= 0) return null;
-
-                // 2. Obtener el código de la parte actual
-                string source = "";
-                if (currentPart is ISource s) source = s.Source;
-                else source = currentPart.GetType().GetProperty("Source")?.GetValue(currentPart)?.ToString();
-
-                if (string.IsNullOrEmpty(source)) return null;
-
-                // 3. Extraer la línea exacta
-                string[] lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                if (lineNumber <= lines.Length)
-                {
-                    return lines[lineNumber - 1].Trim();
-                }
-            }
-            catch (Exception ex)
-            {
-                Utils.Log("❌ Error detectando línea: " + ex.Message);
-            }
-            return null;
-        }
+        // Métodos GetWordUnderCursor() y GetCurrentLineContext() migrados a EditorTextExtractor (Services/EditorTextExtractor.cs)
+        // Acceso vía ServiceFactory.GetEditorTextExtractor() - Principio Single Responsibility
 
         private bool ExecExportTableStructure(CommandData commandData) { return ExecuteWithErrorHandling(() => ExtractorTablasGX.ExportarEstructuraTablas(), "exportar estructura"); }
         private bool ExecExportProcedureSource(CommandData commandData) { return ExecuteWithErrorHandling(() => ProcedureSourceExtractor.ExportarSourceCodeProcedimientos(), "exportar source"); }
